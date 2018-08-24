@@ -9,10 +9,6 @@ public class Data{
 		protected List<double[]> matrix;
 		protected int dataMax, dataMin, channels, dataPoints;
 		
-		public Data() {
-			
-		}
-		
 		protected void loadData(File f) {
 			Scanner scan;
 			try {

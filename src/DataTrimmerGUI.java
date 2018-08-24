@@ -18,18 +18,21 @@ import javax.swing.JButton;
 import java.awt.GridLayout;
 import javax.swing.JLabel;
 import javax.swing.JSpinner;
+import javax.swing.JTextField;
 
 public class DataTrimmerGUI extends JFrame {
 
-	Color[] colors = {Color.white, Color.red, Color.blue, Color.orange, Color.cyan, Color.green, Color.magenta, Color.pink};
+	private Color[] colors = {Color.white, Color.red, Color.blue, Color.orange, Color.cyan, Color.green, Color.magenta, Color.pink};
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane, centerPanel;
 	private JScrollPane scrollPane;
 	private double yScale=1, xScale=1;
-	private JPanel xPanel, yPanel;
-	private JLabel lblMaxX, lblMinX, lblScaleX, lblMaxY, lblMinY, lblScaleY;
-	private JSpinner maxX, minX, scaleX, maxY, minY, scaleY;
-	Data data = new Data();
+	private JPanel xPanel, valueRanges;
+	private JLabel lblScaleX, lblMaxY, lblMinY, lblScaleY;
+	private JSpinner scaleX, scaleY;
+	private Data data = new Data();
+	private JTextField maxVal;
+	private JTextField minVal;
 	
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -99,6 +102,8 @@ public class DataTrimmerGUI extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				data.loadData(new File("eeg.csv"));
+				maxVal.setText(data.dataMax + "");
+				minVal.setText(data.dataMin + "");
 				scaleToFitWindow();
 				repaint();
 			}
@@ -112,7 +117,7 @@ public class DataTrimmerGUI extends JFrame {
 				scaleToFitWindow();
 				repaint();
 				//Update Scroll bar UI -hacky, needs a better way
-				setSize(getWidth()+1, getHeight()+1);
+				//setSize(getWidth()+1, getHeight()+1);
 			}
 		});
 		bottomPanel.add(btnScaleToFit);
@@ -121,53 +126,45 @@ public class DataTrimmerGUI extends JFrame {
 		bottomPanel.add(xPanel);
 		xPanel.setLayout(new GridLayout(0, 2, 0, 0));
 		
-		lblMaxX = new JLabel("Max X:");
-		xPanel.add(lblMaxX);
-		
-		maxX = new JSpinner();
-		xPanel.add(maxX);
-		
-		lblMinX = new JLabel("Min X:");
-		xPanel.add(lblMinX);
-		
-		minX = new JSpinner();
-		xPanel.add(minX);
-		
 		lblScaleX = new JLabel("Scale X:");
 		xPanel.add(lblScaleX);
 		
 		scaleX = new JSpinner();
 		xPanel.add(scaleX);
 		
-		yPanel = new JPanel();
-		bottomPanel.add(yPanel);
-		yPanel.setLayout(new GridLayout(0, 2, 0, 0));
-		
-		lblMaxY = new JLabel("Max Y:");
-		yPanel.add(lblMaxY);
-		
-		maxY = new JSpinner();
-		yPanel.add(maxY);
-		
-		lblMinY = new JLabel("Min Y:");
-		yPanel.add(lblMinY);
-		
-		minY = new JSpinner();
-		yPanel.add(minY);
-		
 		lblScaleY = new JLabel("Scale Y:");
-		yPanel.add(lblScaleY);
+		xPanel.add(lblScaleY);
 		
 		scaleY = new JSpinner();
-		yPanel.add(scaleY);
+		xPanel.add(scaleY);
+		
+		valueRanges = new JPanel();
+		bottomPanel.add(valueRanges);
+		valueRanges.setLayout(new GridLayout(0, 2, 0, 0));
+		
+		lblMaxY = new JLabel("Greatest Value:");
+		valueRanges.add(lblMaxY);
+		
+		maxVal = new JTextField();
+		maxVal.setEditable(false);
+		valueRanges.add(maxVal);
+		maxVal.setColumns(10);
+		
+		lblMinY = new JLabel("Least Value:");
+		valueRanges.add(lblMinY);
+		
+		minVal = new JTextField();
+		minVal.setEditable(false);
+		valueRanges.add(minVal);
+		minVal.setColumns(10);
 	}
 	
-	private void updateSpinners(int xMax, int xMin, int xScale, int yMax, int yMin, int yScale ) {
-		maxX.setValue(xMax);
-		minX.setValue(xMin);
+	private int roundScale(double scale) {
+		return (int)Math.ceil(scale);
+	}
+	
+	private void updateSpinners(int xScale, int yScale ) {
 		scaleX.setValue(xScale);
-		maxY.setValue(yMax);
-		minY.setValue(yMin);
 		scaleY.setValue(yScale);
 	}
 	
@@ -178,7 +175,7 @@ public class DataTrimmerGUI extends JFrame {
 		yScale = ((double)(data.dataMax-data.dataMin))/height;
 		xScale = ((double)data.dataPoints)/width;
 		
-		updateSpinners(data.dataPoints, 0, (int)Math.ceil(xScale), data.dataMax, data.dataMin, (int)Math.ceil(yScale));
+		updateSpinners((int)Math.ceil(xScale), (int)Math.ceil(yScale));
 		centerPanel.setPreferredSize(new Dimension(width, height));
 	}
 	
