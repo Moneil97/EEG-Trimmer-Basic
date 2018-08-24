@@ -21,6 +21,7 @@ import javax.swing.JSpinner;
 
 public class DataTrimmerGUI extends JFrame {
 
+	Color[] colors = {Color.white, Color.red, Color.blue, Color.orange, Color.cyan, Color.green, Color.magenta, Color.pink};
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane, centerPanel;
 	private JScrollPane scrollPane;
@@ -60,13 +61,16 @@ public class DataTrimmerGUI extends JFrame {
 				Graphics2D g = (Graphics2D) g1;
 				g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 				g.setFont(new Font("Arial", Font.PLAIN, 12));
-				g.setColor(Color.black);
+				
 				
 				if (data.matrix == null || data.matrix.isEmpty()) {
+					g.setColor(Color.black);
 					g.drawString("No Data Loaded", 50, 50);
 				}
 				else {
+					int c = 0;
 					for (double[] channel : data.matrix) {
+						g.setColor(colors[c++%colors.length]);
 						for (int i=0; i < channel.length-1; i++) {
 							g.drawLine((int)(i/xScale),     (int)((data.dataMax-channel[i])/yScale),
 									   (int)((i+1)/xScale), (int)((data.dataMax-channel[i+1])/yScale));
@@ -94,14 +98,9 @@ public class DataTrimmerGUI extends JFrame {
 		btnLoadData.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
 				data.loadData(new File("eeg.csv"));
 				scaleToFitWindow();
 				repaint();
-				//centerPanel.setPreferredSize(new Dimension(data.matrix.get(0).length, data.dataMax));
-				//Update Scroll bar UI -hacky, needs a better way
-				//setSize(getWidth()+1, getHeight()+1);
-				
 			}
 		});
 		bottomPanel.add(btnLoadData);
