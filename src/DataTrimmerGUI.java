@@ -28,6 +28,10 @@ public class DataTrimmerGUI extends JFrame {
 	private List<double[]> matrix = new ArrayList<>();
 	private int maxVal, minVal;
 	private VisibleWindow window = new VisibleWindow();
+	private JPanel centerPanel;
+	private JScrollPane scrollPane;
+	private int dataPoints;
+	private double yScale=1, xScale=1;
 	
 	class VisibleWindow{
 		int maxX,maxY,minX,minY;
@@ -36,7 +40,6 @@ public class DataTrimmerGUI extends JFrame {
 	}
 
 	public static void main(String[] args) {
-		
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -57,7 +60,7 @@ public class DataTrimmerGUI extends JFrame {
 		contentPane.setLayout(new BorderLayout(0, 0));
 		setContentPane(contentPane);
 		
-		JPanel centerPanel = new JPanel() {
+		centerPanel = new JPanel() {
 
 			private static final long serialVersionUID = 1L;
 			
@@ -75,7 +78,7 @@ public class DataTrimmerGUI extends JFrame {
 				else {
 					for (double[] channel : matrix) {
 						for (int i=0; i < channel.length-1; i++)
-							g.drawLine(i, maxVal-(int)channel[i], i+1, maxVal-(int)channel[i+1]);
+							g.drawLine((int)(i/xScale), (int)((maxVal-(int)channel[i])/yScale), (int)((i+1)/xScale), (int)((maxVal-(int)channel[i+1])/yScale));
 					}
 				}
 				
@@ -84,7 +87,7 @@ public class DataTrimmerGUI extends JFrame {
 		centerPanel.setBackground(Color.white);
 		centerPanel.setPreferredSize(new Dimension(1000, 1000));
 		
-		JScrollPane scrollPane = new JScrollPane();
+		scrollPane = new JScrollPane();
 		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
 		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
 		scrollPane.setViewportView(centerPanel);
@@ -120,28 +123,47 @@ public class DataTrimmerGUI extends JFrame {
 				
 				maxVal = getMaxValue(matrix);
 				minVal = getMinValue(matrix);
+				dataPoints = matrix.get(0).length;
 				System.out.println(maxVal + " " + minVal);
-				centerPanel.setPreferredSize(new Dimension(matrix.get(0).length, maxVal));
+				
+				//scaleToFitWindow();
 //				window.maxY = maxVal;
 //				window.minY = minVal;
 //				window.minX = 0;
 //				window.maxX = matrix.get(0).length;
 //				window.x = 0;
 //				window.y = 0;
-				//EventQueue.invokeLater(new Runnable() {
-				//	public void run() {
-						repaint();
-						//DataTrimmerGUI.this.validate();
-						//DataTrimmerGUI.this.repaint();
-						DataTrimmerGUI.this.setSize(1000, 1000);
-						//DataTrimmerGUI.this.pack();
-				//	}
-				//});
-				
+
+				repaint();
+				centerPanel.setPreferredSize(new Dimension(matrix.get(0).length, maxVal));
+				//Update Scroll bar UI -hacky, needs a better way
+				setSize(getWidth()+1, getHeight()+1);
 				
 			}
 		});
 		bottomPanel.add(btnLoadData);
+		
+		JButton btnScaleToFit = new JButton("Scale to fit");
+		btnScaleToFit.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				scaleToFitWindow();
+				repaint();
+				//Update Scroll bar UI -hacky, needs a better way
+				setSize(getWidth()+1, getHeight()+1);
+			}
+		});
+		bottomPanel.add(btnScaleToFit);
+	}
+	
+	private void scaleToFitWindow() {
+		int height = scrollPane.getHeight()-20;
+		int width = scrollPane.getWidth()-20;
+		
+		yScale = ((double)maxVal)/height;
+		xScale = ((double)dataPoints)/width;
+		
+		centerPanel.setPreferredSize(new Dimension(width, height));
 	}
 	
 	private int getMaxValue(List<double[]> list) {
