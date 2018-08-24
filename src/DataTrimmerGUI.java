@@ -1,5 +1,6 @@
 import java.awt.BorderLayout;
 import java.awt.Color;
+import java.awt.Dimension;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Graphics;
@@ -16,6 +17,7 @@ import java.util.Scanner;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
+import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
 import javax.swing.JButton;
 
@@ -24,22 +26,16 @@ public class DataTrimmerGUI extends JFrame {
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
 	private List<double[]> matrix = new ArrayList<>();
+	private int maxVal, minVal;
+	private VisibleWindow window = new VisibleWindow();
+	
+	class VisibleWindow{
+		int maxX,maxY,minX,minY;
+		int xScale, yScale;
+		int x,y;
+	}
 
 	public static void main(String[] args) {
-		
-//		List<double[]> n = new ArrayList<>();
-//		n.add(new double[]{1.0,2.0,3.0});
-//		n.add(new double[]{4.0,5.0,6.0});
-//		n.add(new double[]{7.0,8.0,9.0});
-//		n.add(new double[]{10.0,11.0,12.0});
-//		
-//		for (double[] d : n) 
-//			System.out.println(Arrays.toString(d));
-//		
-//		System.out.println("\n");
-//		
-//		for (double[] d : transpose(n)) 
-//			System.out.println(Arrays.toString(d));
 		
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
@@ -71,18 +67,30 @@ public class DataTrimmerGUI extends JFrame {
 				Graphics2D g = (Graphics2D) g1;
 				g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 				g.setFont(new Font("Arial", Font.PLAIN, 12));
+				g.setColor(Color.black);
 				
 				if (matrix.isEmpty()) {
 					g.drawString("No Data Loaded", 50, 50);
 				}
 				else {
-					
+					for (double[] channel : matrix) {
+						for (int i=0; i < channel.length-1; i++)
+							g.drawLine(i, maxVal-(int)channel[i], i+1, maxVal-(int)channel[i+1]);
+					}
 				}
 				
 			}
 		};
 		centerPanel.setBackground(Color.white);
-		contentPane.add(centerPanel, BorderLayout.CENTER);
+		centerPanel.setPreferredSize(new Dimension(1000, 1000));
+		
+		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
+		scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
+		scrollPane.setViewportView(centerPanel);
+		contentPane.add(scrollPane, BorderLayout.CENTER);
+		
+		contentPane.add(scrollPane, BorderLayout.CENTER);
 		
 		JPanel bottomPanel = new JPanel();
 		contentPane.add(bottomPanel, BorderLayout.SOUTH);
@@ -107,8 +115,30 @@ public class DataTrimmerGUI extends JFrame {
 				scan.close();
 				
 				matrix = transpose(matrix);
-				for (double[] d : matrix) 
-					System.out.println(Arrays.toString(d));
+//				for (double[] d : matrix) 
+//					System.out.println(Arrays.toString(d));
+				
+				maxVal = getMaxValue(matrix);
+				minVal = getMinValue(matrix);
+				System.out.println(maxVal + " " + minVal);
+				centerPanel.setPreferredSize(new Dimension(matrix.get(0).length, maxVal));
+//				window.maxY = maxVal;
+//				window.minY = minVal;
+//				window.minX = 0;
+//				window.maxX = matrix.get(0).length;
+//				window.x = 0;
+//				window.y = 0;
+				//EventQueue.invokeLater(new Runnable() {
+				//	public void run() {
+						repaint();
+						//DataTrimmerGUI.this.validate();
+						//DataTrimmerGUI.this.repaint();
+						DataTrimmerGUI.this.setSize(1000, 1000);
+						//DataTrimmerGUI.this.pack();
+				//	}
+				//});
+				
+				
 			}
 		});
 		bottomPanel.add(btnLoadData);
@@ -122,6 +152,16 @@ public class DataTrimmerGUI extends JFrame {
 				max = Double.max(d, max);
 		
 		return ((int)max+1);
+	}
+	
+	private int getMinValue(List<double[]> list) {
+		double min = Double.MAX_VALUE;
+		
+		for (double[] row : list)
+			for (double d : row)
+				min = Double.min(d, min);
+		
+		return ((int)min-1);
 	}
 
 	private List<double[]> transpose(List<double[]> original) {
