@@ -26,11 +26,13 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.JToggleButton;
 
 public class DataTrimmerGUI extends JFrame {
 
 	private Color[] colors = {Color.white, Color.red, Color.blue, Color.orange, Color.cyan, Color.green, Color.magenta, Color.pink};
 	private static final long serialVersionUID = 1L;
+	//private final int defaultSize = 500;
 	private JPanel contentPane, centerPanel;
 	private JScrollPane scrollPane;
 	private double yScale=1, xScale=1;
@@ -40,9 +42,13 @@ public class DataTrimmerGUI extends JFrame {
 	private Data data = new Data();
 	private JTextField maxVal;
 	private JTextField minVal;
+	JButton btnScaleToFit;
 	//private int leftLine = 0, rightLine;
 	//private boolean leftDrag, rightDrag;
 	private DraggableLine leftLine, rightLine;
+	private JPanel panel;
+	private JToggleButton tglbtnLeftTrim;
+	private JToggleButton tglbtnRightTrim;
 	
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -91,7 +97,8 @@ public class DataTrimmerGUI extends JFrame {
 					}
 					
 					g.setColor(Color.blue);
-					leftLine.draw(g, getHeight());
+					leftLine.draw(g, getHeight(), getWidth());
+					rightLine.draw(g, getHeight(), getWidth());
 				}
 				
 			}
@@ -106,7 +113,11 @@ public class DataTrimmerGUI extends JFrame {
 			@Override
 			public void mouseDragged(MouseEvent e) {
 				if (leftLine.dragging) {
-					leftLine.xDrawn = e.getX();
+					leftLine.setXDrawn(e.getX(), xScale);
+					repaint();
+				}
+				else if (rightLine.dragging) {
+					rightLine.setXDrawn(e.getX(), xScale);
 					repaint();
 				}
 			}
@@ -114,15 +125,15 @@ public class DataTrimmerGUI extends JFrame {
 		centerPanel.addMouseListener(new MouseListener() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				if (leftLine.dragging) {
-					leftLine.dragging = false;
-				}
+				leftLine.dragging = false;
+				rightLine.dragging = false;
 			}
 			
 			@Override
 			public void mousePressed(MouseEvent e) {
 				int x = e.getX();
 				leftLine.checkMouse(x);
+				rightLine.checkMouse(x);
 			}
 			
 			@Override
@@ -151,13 +162,22 @@ public class DataTrimmerGUI extends JFrame {
 				data.loadData(new File("eeg.csv"));
 				maxVal.setText(data.dataMax + "");
 				minVal.setText(data.dataMin + "");
+				leftLine = new DraggableLine(0, xScale, true);
+				rightLine = new DraggableLine(centerPanel.getWidth(), xScale, false);
 				scaleToFitWindow();
+				rightLine.setXReal(data.dataPoints, xScale);
+				btnScaleToFit.setEnabled(true);
+				scaleX.setEnabled(true);
+				scaleY.setEnabled(true);
+				tglbtnLeftTrim.setEnabled(true);
+				tglbtnRightTrim.setEnabled(true);
 				repaint();
 			}
 		});
 		bottomPanel.add(btnLoadData);
 		
-		JButton btnScaleToFit = new JButton("Scale to fit");
+		btnScaleToFit = new JButton("Scale to fit");
+		btnScaleToFit.setEnabled(false);
 		btnScaleToFit.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
@@ -178,10 +198,13 @@ public class DataTrimmerGUI extends JFrame {
 		
 		SpinnerModel modelX = new SpinnerNumberModel(1, .01, 100, .5);
 		scaleX = new JSpinner(modelX);
+		scaleX.setEnabled(false);
 		scaleX.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent arg0) {
 				xScale = (double)scaleX.getValue();
+				leftLine.changeScale(xScale);
+				rightLine.changeScale(xScale);
 				centerPanel.setPreferredSize(new Dimension((int)(data.dataPoints/xScale), (int)((data.dataMax-data.dataMin)/yScale)));
 				scrollPane.getViewport().revalidate();
 				repaint();
@@ -194,6 +217,7 @@ public class DataTrimmerGUI extends JFrame {
 		
 		SpinnerModel modelY = new SpinnerNumberModel(1, .01, 100, .5);
 		scaleY = new JSpinner(modelY);
+		scaleY.setEnabled(false);
 		scaleY.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent arg0) {
@@ -225,13 +249,32 @@ public class DataTrimmerGUI extends JFrame {
 		valueRanges.add(minVal);
 		minVal.setColumns(10);
 		
-		leftLine = new DraggableLine(0, xScale, true);
-		rightLine = new DraggableLine(centerPanel.getWidth(), xScale, false);
+		panel = new JPanel();
+		bottomPanel.add(panel);
+		panel.setLayout(new GridLayout(0, 1, 0, 0));
+		
+		tglbtnLeftTrim = new JToggleButton("Left Trim");
+		tglbtnLeftTrim.setEnabled(false);
+		tglbtnLeftTrim.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				leftLine.enabled = tglbtnLeftTrim.isSelected();
+				repaint();
+			}
+		});
+		panel.add(tglbtnLeftTrim);
+		
+		tglbtnRightTrim = new JToggleButton("Right Trim");
+		tglbtnRightTrim.setEnabled(false);
+		tglbtnRightTrim.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				rightLine.enabled = tglbtnRightTrim.isSelected();
+				repaint();
+			}
+		});
+		panel.add(tglbtnRightTrim);
 	}
-	
-//	private int roundScale(double scale) {
-//		return (int)Math.ceil(scale);
-//	}
 	
 	private void updateSpinners(double xScale, double yScale ) {
 		scaleX.setValue(xScale);
