@@ -5,24 +5,27 @@ import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Graphics;
 import java.awt.Graphics2D;
+import java.awt.GridLayout;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
+import java.awt.event.MouseMotionListener;
 import java.io.File;
 
+import javax.swing.JButton;
 import javax.swing.JFrame;
+import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.border.EmptyBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
-import javax.swing.JButton;
-import java.awt.GridLayout;
-import javax.swing.JLabel;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 
 public class DataTrimmerGUI extends JFrame {
 
@@ -37,6 +40,9 @@ public class DataTrimmerGUI extends JFrame {
 	private Data data = new Data();
 	private JTextField maxVal;
 	private JTextField minVal;
+	//private int leftLine = 0, rightLine;
+	//private boolean leftDrag, rightDrag;
+	private DraggableLine leftLine, rightLine;
 	
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -72,7 +78,7 @@ public class DataTrimmerGUI extends JFrame {
 				
 				if (data.matrix == null || data.matrix.isEmpty()) {
 					g.setColor(Color.black);
-					g.drawString("No Data Loaded", 50, 50);
+					g.drawString("No Data Loaded", 200, 200);
 				}
 				else {
 					int c = 0;
@@ -83,12 +89,49 @@ public class DataTrimmerGUI extends JFrame {
 									   (int)((i+1)/xScale), (int)((data.dataMax-channel[i+1])/yScale));
 						}
 					}
+					
+					g.setColor(Color.blue);
+					leftLine.draw(g, getHeight());
 				}
 				
 			}
 		};
 		centerPanel.setBackground(Color.white);
-		centerPanel.setPreferredSize(new Dimension(1000, 1000));
+		centerPanel.setPreferredSize(new Dimension(500, 500));
+		setLocationRelativeTo(null);
+		centerPanel.addMouseMotionListener(new MouseMotionListener() {
+			@Override
+			public void mouseMoved(MouseEvent e) {}
+			
+			@Override
+			public void mouseDragged(MouseEvent e) {
+				if (leftLine.dragging) {
+					leftLine.xDrawn = e.getX();
+					repaint();
+				}
+			}
+		});
+		centerPanel.addMouseListener(new MouseListener() {
+			@Override
+			public void mouseReleased(MouseEvent e) {
+				if (leftLine.dragging) {
+					leftLine.dragging = false;
+				}
+			}
+			
+			@Override
+			public void mousePressed(MouseEvent e) {
+				int x = e.getX();
+				leftLine.checkMouse(x);
+			}
+			
+			@Override
+			public void mouseExited(MouseEvent e) {}
+			@Override
+			public void mouseEntered(MouseEvent e) {}
+			@Override
+			public void mouseClicked(MouseEvent e) {}
+		});
 		
 		scrollPane = new JScrollPane();
 		scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_ALWAYS);
@@ -119,9 +162,8 @@ public class DataTrimmerGUI extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				scaleToFitWindow();
+				scrollPane.getViewport().revalidate();
 				repaint();
-				//Update Scroll bar UI -hacky, needs a better way
-				//setSize(getWidth()+1, getHeight()+1);
 			}
 		});
 		bottomPanel.add(btnScaleToFit);
@@ -130,7 +172,7 @@ public class DataTrimmerGUI extends JFrame {
 		bottomPanel.add(xPanel);
 		xPanel.setLayout(new GridLayout(0, 2, 0, 0));
 		
-		lblScaleX = new JLabel("Scale X:");
+		lblScaleX = new JLabel("Scale 1/X:");
 		xPanel.add(lblScaleX);
 		
 		
@@ -139,14 +181,15 @@ public class DataTrimmerGUI extends JFrame {
 		scaleX.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent arg0) {
-				System.out.println(scaleX.getValue());
 				xScale = (double)scaleX.getValue();
-				centerPanel.setPreferredSize(new Dimension((int)(data.dataPoints/xScale), centerPanel.getHeight()));
+				centerPanel.setPreferredSize(new Dimension((int)(data.dataPoints/xScale), (int)((data.dataMax-data.dataMin)/yScale)));
+				scrollPane.getViewport().revalidate();
+				repaint();
 			}
 		});
 		xPanel.add(scaleX);
 		
-		lblScaleY = new JLabel("Scale Y:");
+		lblScaleY = new JLabel("Scale 1/Y:");
 		xPanel.add(lblScaleY);
 		
 		SpinnerModel modelY = new SpinnerNumberModel(1, .01, 100, .5);
@@ -155,7 +198,9 @@ public class DataTrimmerGUI extends JFrame {
 			@Override
 			public void stateChanged(ChangeEvent arg0) {
 				yScale = (double)scaleY.getValue();
-				centerPanel.setPreferredSize(new Dimension(centerPanel.getWidth(), (int)((data.dataMax-data.dataMin)/yScale)));
+				centerPanel.setPreferredSize(new Dimension((int)(data.dataPoints/xScale), (int)((data.dataMax-data.dataMin)/yScale)));
+				scrollPane.getViewport().revalidate();
+				repaint();
 			}
 		});
 		xPanel.add(scaleY);
@@ -179,6 +224,9 @@ public class DataTrimmerGUI extends JFrame {
 		minVal.setEditable(false);
 		valueRanges.add(minVal);
 		minVal.setColumns(10);
+		
+		leftLine = new DraggableLine(0, xScale, true);
+		rightLine = new DraggableLine(centerPanel.getWidth(), xScale, false);
 	}
 	
 //	private int roundScale(double scale) {
@@ -198,7 +246,6 @@ public class DataTrimmerGUI extends JFrame {
 		xScale = ((double)data.dataPoints)/width;
 		
 		updateSpinners(xScale, yScale);
-		centerPanel.setPreferredSize(new Dimension(width, height));
 	}
 	
 }
