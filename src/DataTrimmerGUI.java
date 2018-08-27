@@ -14,11 +14,15 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.border.EmptyBorder;
+import javax.swing.event.ChangeEvent;
+import javax.swing.event.ChangeListener;
 import javax.swing.JButton;
 import java.awt.GridLayout;
 import javax.swing.JLabel;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
+import javax.swing.SpinnerModel;
+import javax.swing.SpinnerNumberModel;
 
 public class DataTrimmerGUI extends JFrame {
 
@@ -129,13 +133,31 @@ public class DataTrimmerGUI extends JFrame {
 		lblScaleX = new JLabel("Scale X:");
 		xPanel.add(lblScaleX);
 		
-		scaleX = new JSpinner();
+		
+		SpinnerModel modelX = new SpinnerNumberModel(1, .01, 100, .5);
+		scaleX = new JSpinner(modelX);
+		scaleX.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				System.out.println(scaleX.getValue());
+				xScale = (double)scaleX.getValue();
+				centerPanel.setPreferredSize(new Dimension((int)(data.dataPoints/xScale), centerPanel.getHeight()));
+			}
+		});
 		xPanel.add(scaleX);
 		
 		lblScaleY = new JLabel("Scale Y:");
 		xPanel.add(lblScaleY);
 		
-		scaleY = new JSpinner();
+		SpinnerModel modelY = new SpinnerNumberModel(1, .01, 100, .5);
+		scaleY = new JSpinner(modelY);
+		scaleY.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent arg0) {
+				yScale = (double)scaleY.getValue();
+				centerPanel.setPreferredSize(new Dimension(centerPanel.getWidth(), (int)((data.dataMax-data.dataMin)/yScale)));
+			}
+		});
 		xPanel.add(scaleY);
 		
 		valueRanges = new JPanel();
@@ -159,11 +181,11 @@ public class DataTrimmerGUI extends JFrame {
 		minVal.setColumns(10);
 	}
 	
-	private int roundScale(double scale) {
-		return (int)Math.ceil(scale);
-	}
+//	private int roundScale(double scale) {
+//		return (int)Math.ceil(scale);
+//	}
 	
-	private void updateSpinners(int xScale, int yScale ) {
+	private void updateSpinners(double xScale, double yScale ) {
 		scaleX.setValue(xScale);
 		scaleY.setValue(yScale);
 	}
@@ -175,7 +197,7 @@ public class DataTrimmerGUI extends JFrame {
 		yScale = ((double)(data.dataMax-data.dataMin))/height;
 		xScale = ((double)data.dataPoints)/width;
 		
-		updateSpinners((int)Math.ceil(xScale), (int)Math.ceil(yScale));
+		updateSpinners(xScale, yScale);
 		centerPanel.setPreferredSize(new Dimension(width, height));
 	}
 	
