@@ -15,6 +15,7 @@ import java.awt.event.MouseMotionListener;
 import java.io.File;
 
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -32,7 +33,6 @@ public class DataTrimmerGUI extends JFrame {
 
 	private Color[] colors = {Color.white, Color.red, Color.blue, Color.orange, Color.cyan, Color.green, Color.magenta, Color.pink};
 	private static final long serialVersionUID = 1L;
-	//private final int defaultSize = 500;
 	private JPanel contentPane, centerPanel;
 	private JScrollPane scrollPane;
 	private double yScale=1, xScale=1;
@@ -43,8 +43,6 @@ public class DataTrimmerGUI extends JFrame {
 	private JTextField maxVal;
 	private JTextField minVal;
 	JButton btnScaleToFit;
-	//private int leftLine = 0, rightLine;
-	//private boolean leftDrag, rightDrag;
 	private DraggableLine leftLine, rightLine;
 	private JPanel panel;
 	private JToggleButton tglbtnLeftTrim;
@@ -159,19 +157,28 @@ public class DataTrimmerGUI extends JFrame {
 		btnLoadData.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				data.loadData(new File("eeg.csv"));
-				maxVal.setText(data.dataMax + "");
-				minVal.setText(data.dataMin + "");
-				leftLine = new DraggableLine(0, xScale, true);
-				rightLine = new DraggableLine(centerPanel.getWidth(), xScale, false);
-				scaleToFitWindow();
-				rightLine.setXReal(data.dataPoints, xScale);
-				btnScaleToFit.setEnabled(true);
-				scaleX.setEnabled(true);
-				scaleY.setEnabled(true);
-				tglbtnLeftTrim.setEnabled(true);
-				tglbtnRightTrim.setEnabled(true);
-				repaint();
+				
+				JFileChooser fc = new JFileChooser(".");
+				fc.showOpenDialog(DataTrimmerGUI.this);
+				File f = fc.getSelectedFile();
+				if (f.exists()) {
+					data.loadData(f);
+					maxVal.setText(data.dataMax + "");
+					minVal.setText(data.dataMin + "");
+					leftLine = new DraggableLine(0, xScale, true);
+					rightLine = new DraggableLine(centerPanel.getWidth(), xScale, false);
+					scaleToFitWindow();
+					rightLine.setXReal(data.dataPoints, xScale);
+					btnScaleToFit.setEnabled(true);
+					scaleX.setEnabled(true);
+					scaleY.setEnabled(true);
+					tglbtnLeftTrim.setEnabled(true);
+					tglbtnRightTrim.setEnabled(true);
+					repaint();
+				}
+				
+				
+				
 			}
 		});
 		bottomPanel.add(btnLoadData);
