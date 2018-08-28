@@ -15,6 +15,7 @@ import java.awt.event.MouseMotionListener;
 import java.io.File;
 
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -162,7 +163,10 @@ public class DataTrimmerGUI extends JFrame {
 				fc.showOpenDialog(DataTrimmerGUI.this);
 				File f = fc.getSelectedFile();
 				if (f.exists()) {
-					data.loadData(f);
+					//data.loadData(f);
+					FileConfirm confirm = new FileConfirm(data, f);
+					confirm.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+					confirm.setVisible(true);
 					maxVal.setText(data.dataMax + "");
 					minVal.setText(data.dataMin + "");
 					leftLine = new DraggableLine(0, xScale, true);
