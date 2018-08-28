@@ -25,7 +25,6 @@ public class Data{
 				matrix.add(rowValues);
 			}
 			scan.close();
-			transpose();
 			dataMax = getMaxValue(matrix);
 			dataMin = getMinValue(matrix);
 			channels = matrix.size();
@@ -67,5 +66,9 @@ public class Data{
 				n.add(row);
 			}
 			matrix = n;
+			channels = matrix.size();
+			dataPoints = matrix.get(0).length;
+			dataMax = getMaxValue(matrix);
+			dataMin = getMinValue(matrix);
 		}
 	}

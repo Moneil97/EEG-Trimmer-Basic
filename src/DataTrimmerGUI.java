@@ -12,23 +12,21 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.io.File;
 
 import javax.swing.JButton;
 import javax.swing.JDialog;
-import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
 import javax.swing.JTextField;
+import javax.swing.JToggleButton;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.JToggleButton;
 
 public class DataTrimmerGUI extends JFrame {
 
@@ -158,15 +156,11 @@ public class DataTrimmerGUI extends JFrame {
 		btnLoadData.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
-				JFileChooser fc = new JFileChooser(".");
-				fc.showOpenDialog(DataTrimmerGUI.this);
-				File f = fc.getSelectedFile();
-				if (f.exists()) {
-					//data.loadData(f);
-					FileConfirm confirm = new FileConfirm(data, f);
-					confirm.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-					confirm.setVisible(true);
+
+				FileConfirm confirm = new FileConfirm(DataTrimmerGUI.this, data);
+				confirm.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+				confirm.setVisible(true);
+				if (confirm.selection.equals("OK")) {
 					maxVal.setText(data.dataMax + "");
 					minVal.setText(data.dataMin + "");
 					leftLine = new DraggableLine(0, xScale, true);
@@ -178,11 +172,15 @@ public class DataTrimmerGUI extends JFrame {
 					scaleY.setEnabled(true);
 					tglbtnLeftTrim.setEnabled(true);
 					tglbtnRightTrim.setEnabled(true);
-					repaint();
 				}
-				
-				
-				
+				else if (confirm.selection.equals("Cancel")) {
+					btnScaleToFit.setEnabled(false);
+					scaleX.setEnabled(false);
+					scaleY.setEnabled(false);
+					tglbtnLeftTrim.setEnabled(false);
+					tglbtnRightTrim.setEnabled(false);
+				}
+				repaint();
 			}
 		});
 		bottomPanel.add(btnLoadData);
