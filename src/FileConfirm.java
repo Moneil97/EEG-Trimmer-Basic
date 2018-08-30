@@ -24,17 +24,17 @@ public class FileConfirm extends JDialog {
 	String selection;
 	private JLabel dataPointsLabel, channelsLabel;
 
-	public FileConfirm(JFrame parent, Data data) {
+	public FileConfirm(JFrame parent, Data data) throws EarlyCloseException {
 		super(parent, Dialog.ModalityType.APPLICATION_MODAL);
+		setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);//.DISPOSE_ON_CLOSE);
 		
 		FileNameExtensionFilter filter = new FileNameExtensionFilter("csv", "csv");
 		JFileChooser fc = new JFileChooser(".");
 		fc.setFileFilter(filter);
 		fc.showOpenDialog(this);
 		File f = fc.getSelectedFile();
-		if (!f.exists()) {
-			return;
-		}
+		if (f == null || !f.exists())
+			throw new EarlyCloseException();
 		
 		data.loadData(f);
 		setBounds(100, 100, 450, 200);
@@ -81,6 +81,7 @@ public class FileConfirm extends JDialog {
 			@Override
 			public void actionPerformed(ActionEvent arg0) {
 				selection = "OK";
+				FileConfirm.this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 				FileConfirm.this.dispatchEvent(new WindowEvent(FileConfirm.this, WindowEvent.WINDOW_CLOSING));
 			}
 		});
@@ -106,6 +107,7 @@ public class FileConfirm extends JDialog {
 			public void actionPerformed(ActionEvent arg0) {
 				selection = "Cancel";
 				data.matrix = null;
+				FileConfirm.this.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 				FileConfirm.this.dispatchEvent(new WindowEvent(FileConfirm.this, WindowEvent.WINDOW_CLOSING));
 			}
 		});

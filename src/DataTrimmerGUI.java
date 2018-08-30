@@ -14,9 +14,9 @@ import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
@@ -156,30 +156,34 @@ public class DataTrimmerGUI extends JFrame {
 		btnLoadData.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-
-				FileConfirm confirm = new FileConfirm(DataTrimmerGUI.this, data);
-				confirm.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-				confirm.setVisible(true);
-				if (confirm.selection.equals("OK")) {
-					maxVal.setText(data.dataMax + "");
-					minVal.setText(data.dataMin + "");
-					leftLine = new DraggableLine(0, xScale, true);
-					rightLine = new DraggableLine(centerPanel.getWidth(), xScale, false);
-					scaleToFitWindow();
-					rightLine.setXReal(data.dataPoints, xScale);
-					btnScaleToFit.setEnabled(true);
-					scaleX.setEnabled(true);
-					scaleY.setEnabled(true);
-					tglbtnLeftTrim.setEnabled(true);
-					tglbtnRightTrim.setEnabled(true);
+				try {
+					FileConfirm confirm = new FileConfirm(DataTrimmerGUI.this, data);
+					confirm.setVisible(true);
+					if (confirm.selection.equals("OK")) {
+						maxVal.setText(data.dataMax + "");
+						minVal.setText(data.dataMin + "");
+						leftLine = new DraggableLine(0, xScale, true);
+						rightLine = new DraggableLine(centerPanel.getWidth(), xScale, false);
+						scaleToFitWindow();
+						rightLine.setXReal(data.dataPoints, xScale);
+						btnScaleToFit.setEnabled(true);
+						scaleX.setEnabled(true);
+						scaleY.setEnabled(true);
+						tglbtnLeftTrim.setEnabled(true);
+						tglbtnRightTrim.setEnabled(true);
+					}
+					else if (confirm.selection.equals("Cancel")) {
+						btnScaleToFit.setEnabled(false);
+						scaleX.setEnabled(false);
+						scaleY.setEnabled(false);
+						tglbtnLeftTrim.setEnabled(false);
+						tglbtnRightTrim.setEnabled(false);
+					}
+				} catch (EarlyCloseException e1) {
+					//e1.printStackTrace();
+					JOptionPane.showMessageDialog(DataTrimmerGUI.this, "Did not load a file");
 				}
-				else if (confirm.selection.equals("Cancel")) {
-					btnScaleToFit.setEnabled(false);
-					scaleX.setEnabled(false);
-					scaleY.setEnabled(false);
-					tglbtnLeftTrim.setEnabled(false);
-					tglbtnRightTrim.setEnabled(false);
-				}
+				
 				repaint();
 			}
 		});
