@@ -46,6 +46,13 @@ public class DataTrimmerGUI extends JFrame {
 	private JPanel panel;
 	private JToggleButton tglbtnLeftTrim;
 	private JToggleButton tglbtnRightTrim;
+	private JLabel lblHz;
+	private JSpinner freqSpinner;
+	private JTextField leftTrimSample;
+	private JTextField leftTrimTime;
+	private JTextField rightTrimSample;
+	private JTextField rightTrimTime;
+	private boolean dataLoaded = false;
 	
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -62,7 +69,7 @@ public class DataTrimmerGUI extends JFrame {
 
 	public DataTrimmerGUI() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 800, 625);
+		setBounds(100, 100, 1059, 625);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		contentPane.setLayout(new BorderLayout(0, 0));
@@ -109,28 +116,38 @@ public class DataTrimmerGUI extends JFrame {
 			
 			@Override
 			public void mouseDragged(MouseEvent e) {
-				if (leftLine.dragging) {
-					leftLine.setXDrawn(e.getX(), xScale);
-					repaint();
-				}
-				else if (rightLine.dragging) {
-					rightLine.setXDrawn(e.getX(), xScale);
-					repaint();
+				if (dataLoaded) {
+					if (leftLine.dragging) {
+						leftLine.setXDrawn(e.getX(), xScale);
+						leftTrimSample.setText(leftLine.getXReal() + "");
+						leftTrimTime.setText(String.format("%.3f sec", leftLine.getXReal()/(float)(int)freqSpinner.getValue()));
+						repaint();
+					}
+					else if (rightLine.dragging) {
+						rightLine.setXDrawn(e.getX(), xScale);
+						rightTrimSample.setText(rightLine.getXReal() + "");
+						rightTrimTime.setText(String.format("%.3f sec", rightLine.getXReal()/(float)(int)freqSpinner.getValue()));
+						repaint();
+					}
 				}
 			}
 		});
 		centerPanel.addMouseListener(new MouseListener() {
 			@Override
 			public void mouseReleased(MouseEvent e) {
-				leftLine.dragging = false;
-				rightLine.dragging = false;
+				if (dataLoaded) {
+					leftLine.dragging = false;
+					rightLine.dragging = false;
+				}
 			}
 			
 			@Override
 			public void mousePressed(MouseEvent e) {
-				int x = e.getX();
-				leftLine.checkMouse(x);
-				rightLine.checkMouse(x);
+				if (dataLoaded) {
+					int x = e.getX();
+					leftLine.checkMouse(x);
+					rightLine.checkMouse(x);
+				}
 			}
 			
 			@Override
@@ -171,17 +188,24 @@ public class DataTrimmerGUI extends JFrame {
 						scaleY.setEnabled(true);
 						tglbtnLeftTrim.setEnabled(true);
 						tglbtnRightTrim.setEnabled(true);
+						dataLoaded = true;
 					}
 					else if (confirm.selection.equals("Cancel")) {
 						btnScaleToFit.setEnabled(false);
 						scaleX.setEnabled(false);
 						scaleY.setEnabled(false);
 						tglbtnLeftTrim.setEnabled(false);
+						tglbtnLeftTrim.setSelected(false);
 						tglbtnRightTrim.setEnabled(false);
+						tglbtnRightTrim.setSelected(false);
+						leftTrimSample.setText("");
+						leftTrimTime.setText("");
+						rightTrimSample.setText("");
+						rightTrimTime.setText("");
+						dataLoaded = false;
 					}
 				} catch (EarlyCloseException e1) {
-					//e1.printStackTrace();
-					JOptionPane.showMessageDialog(DataTrimmerGUI.this, "Did not load a file");
+					//JOptionPane.showMessageDialog(DataTrimmerGUI.this, "Did not load a file");
 				}
 				
 				repaint();
@@ -242,6 +266,14 @@ public class DataTrimmerGUI extends JFrame {
 		});
 		xPanel.add(scaleY);
 		
+		lblHz = new JLabel(" Hz:");
+		xPanel.add(lblHz);
+		
+		freqSpinner = new JSpinner();
+		xPanel.add(freqSpinner);
+		//freqSpinner.setPreferredSize(new Dimension(50,20));
+		freqSpinner.setModel(new SpinnerNumberModel(new Integer(128), new Integer(1), null, new Integer(1)));
+		
 		valueRanges = new JPanel();
 		bottomPanel.add(valueRanges);
 		valueRanges.setLayout(new GridLayout(0, 2, 0, 0));
@@ -252,7 +284,7 @@ public class DataTrimmerGUI extends JFrame {
 		maxVal = new JTextField();
 		maxVal.setEditable(false);
 		valueRanges.add(maxVal);
-		maxVal.setColumns(10);
+		maxVal.setColumns(6);
 		
 		lblMinY = new JLabel("Least Value:");
 		valueRanges.add(lblMinY);
@@ -260,11 +292,11 @@ public class DataTrimmerGUI extends JFrame {
 		minVal = new JTextField();
 		minVal.setEditable(false);
 		valueRanges.add(minVal);
-		minVal.setColumns(10);
+		minVal.setColumns(6);
 		
 		panel = new JPanel();
 		bottomPanel.add(panel);
-		panel.setLayout(new GridLayout(0, 1, 0, 0));
+		panel.setLayout(new GridLayout(0, 3, 0, 0));
 		
 		tglbtnLeftTrim = new JToggleButton("Left Trim");
 		tglbtnLeftTrim.setEnabled(false);
@@ -272,6 +304,8 @@ public class DataTrimmerGUI extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				leftLine.enabled = tglbtnLeftTrim.isSelected();
+				leftTrimSample.setText(leftLine.getXReal() + "");
+				leftTrimTime.setText(String.format("%.3f sec", leftLine.getXReal()/(float)(int)freqSpinner.getValue()));
 				repaint();
 			}
 		});
@@ -283,10 +317,32 @@ public class DataTrimmerGUI extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				rightLine.enabled = tglbtnRightTrim.isSelected();
+				rightTrimSample.setText(rightLine.getXReal() + "");
+				rightTrimTime.setText(String.format("%.3f sec", rightLine.getXReal()/(float)(int)freqSpinner.getValue()));
 				repaint();
 			}
 		});
+		
+		leftTrimSample = new JTextField();
+		panel.add(leftTrimSample);
+		leftTrimSample.setEditable(false);
+		leftTrimSample.setColumns(10);
+		
+		leftTrimTime = new JTextField();
+		panel.add(leftTrimTime);
+		leftTrimTime.setEditable(false);
+		leftTrimTime.setColumns(10);
 		panel.add(tglbtnRightTrim);
+		
+		rightTrimSample = new JTextField();
+		panel.add(rightTrimSample);
+		rightTrimSample.setEditable(false);
+		rightTrimSample.setColumns(10);
+		
+		rightTrimTime = new JTextField();
+		panel.add(rightTrimTime);
+		rightTrimTime.setEditable(false);
+		rightTrimTime.setColumns(10);
 	}
 	
 	private void updateSpinners(double xScale, double yScale ) {
