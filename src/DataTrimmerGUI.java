@@ -27,6 +27,7 @@ import javax.swing.SpinnerNumberModel;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
+import javax.swing.SwingConstants;
 
 public class DataTrimmerGUI extends JFrame {
 
@@ -53,6 +54,9 @@ public class DataTrimmerGUI extends JFrame {
 	private JTextField rightTrimSample;
 	private JTextField rightTrimTime;
 	private boolean dataLoaded = false;
+	private JButton btnSaveData;
+	private JPanel panel_1;
+	private JPanel panel_2;
 	
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -69,7 +73,8 @@ public class DataTrimmerGUI extends JFrame {
 
 	public DataTrimmerGUI() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-		setBounds(100, 100, 1059, 625);
+		setBounds(100, 100, 1049, 700);
+		setMinimumSize(new Dimension(890, 500));
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
 		contentPane.setLayout(new BorderLayout(0, 0));
@@ -169,7 +174,40 @@ public class DataTrimmerGUI extends JFrame {
 		JPanel bottomPanel = new JPanel();
 		contentPane.add(bottomPanel, BorderLayout.SOUTH);
 		
+		panel_1 = new JPanel();
+		bottomPanel.add(panel_1);
+		panel_1.setLayout(new GridLayout(0, 2, 0, 0));
+		
 		JButton btnLoadData = new JButton("Load Data");
+		panel_1.add(btnLoadData);
+		
+		btnScaleToFit = new JButton("Scale to fit");
+		panel_1.add(btnScaleToFit);
+		btnScaleToFit.setEnabled(false);
+		btnScaleToFit.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				scaleToFitWindow();
+				scrollPane.getViewport().revalidate();
+				repaint();
+			}
+		});
+		
+		btnSaveData = new JButton("Save Data");
+		btnSaveData.setEnabled(false);
+		panel_1.add(btnSaveData);
+		
+		panel_2 = new JPanel();
+		panel_1.add(panel_2);
+		panel_2.setLayout(new BorderLayout(0, 0));
+		
+		lblHz = new JLabel(" Hz:");
+		panel_2.add(lblHz, BorderLayout.WEST);
+		
+		freqSpinner = new JSpinner();
+		panel_2.add(freqSpinner, BorderLayout.CENTER);
+		//freqSpinner.setPreferredSize(new Dimension(50,20));
+		freqSpinner.setModel(new SpinnerNumberModel(new Integer(128), new Integer(1), null, new Integer(1)));
 		btnLoadData.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -188,6 +226,7 @@ public class DataTrimmerGUI extends JFrame {
 						scaleY.setEnabled(true);
 						tglbtnLeftTrim.setEnabled(true);
 						tglbtnRightTrim.setEnabled(true);
+						btnSaveData.setEnabled(true);
 						dataLoaded = true;
 					}
 					else if (confirm.selection.equals("Cancel")) {
@@ -195,15 +234,16 @@ public class DataTrimmerGUI extends JFrame {
 						scaleX.setEnabled(false);
 						scaleY.setEnabled(false);
 						tglbtnLeftTrim.setEnabled(false);
-						tglbtnLeftTrim.setSelected(false);
 						tglbtnRightTrim.setEnabled(false);
-						tglbtnRightTrim.setSelected(false);
-						leftTrimSample.setText("");
-						leftTrimTime.setText("");
-						rightTrimSample.setText("");
-						rightTrimTime.setText("");
+						btnSaveData.setEnabled(false);
 						dataLoaded = false;
 					}
+					tglbtnLeftTrim.setSelected(false);
+					tglbtnRightTrim.setSelected(false);
+					leftTrimSample.setText("");
+					leftTrimTime.setText("");
+					rightTrimSample.setText("");
+					rightTrimTime.setText("");
 				} catch (EarlyCloseException e1) {
 					//JOptionPane.showMessageDialog(DataTrimmerGUI.this, "Did not load a file");
 				}
@@ -211,19 +251,6 @@ public class DataTrimmerGUI extends JFrame {
 				repaint();
 			}
 		});
-		bottomPanel.add(btnLoadData);
-		
-		btnScaleToFit = new JButton("Scale to fit");
-		btnScaleToFit.setEnabled(false);
-		btnScaleToFit.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				scaleToFitWindow();
-				scrollPane.getViewport().revalidate();
-				repaint();
-			}
-		});
-		bottomPanel.add(btnScaleToFit);
 		
 		xPanel = new JPanel();
 		bottomPanel.add(xPanel);
@@ -266,14 +293,6 @@ public class DataTrimmerGUI extends JFrame {
 		});
 		xPanel.add(scaleY);
 		
-		lblHz = new JLabel(" Hz:");
-		xPanel.add(lblHz);
-		
-		freqSpinner = new JSpinner();
-		xPanel.add(freqSpinner);
-		//freqSpinner.setPreferredSize(new Dimension(50,20));
-		freqSpinner.setModel(new SpinnerNumberModel(new Integer(128), new Integer(1), null, new Integer(1)));
-		
 		valueRanges = new JPanel();
 		bottomPanel.add(valueRanges);
 		valueRanges.setLayout(new GridLayout(0, 2, 0, 0));
@@ -282,6 +301,7 @@ public class DataTrimmerGUI extends JFrame {
 		valueRanges.add(lblMaxY);
 		
 		maxVal = new JTextField();
+		maxVal.setHorizontalAlignment(SwingConstants.RIGHT);
 		maxVal.setEditable(false);
 		valueRanges.add(maxVal);
 		maxVal.setColumns(6);
@@ -290,6 +310,7 @@ public class DataTrimmerGUI extends JFrame {
 		valueRanges.add(lblMinY);
 		
 		minVal = new JTextField();
+		minVal.setHorizontalAlignment(SwingConstants.RIGHT);
 		minVal.setEditable(false);
 		valueRanges.add(minVal);
 		minVal.setColumns(6);
