@@ -16,7 +16,6 @@ import java.awt.event.MouseMotionListener;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JSpinner;
@@ -24,39 +23,27 @@ import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.SpinnerModel;
 import javax.swing.SpinnerNumberModel;
+import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
-import javax.swing.SwingConstants;
 
 public class DataTrimmerGUI extends JFrame {
 
-	private Color[] colors = {Color.white, Color.red, Color.blue, Color.orange, Color.cyan, Color.green, Color.magenta, Color.pink};
 	private static final long serialVersionUID = 1L;
-	private JPanel contentPane, centerPanel;
+	private Color[] colors = {Color.white, Color.red, Color.blue, Color.orange, Color.cyan, Color.green, Color.magenta, Color.pink};
+	private JPanel contentPane, centerPanel, xPanel, valueRanges, panel, panel_1, panel_2;
+	private JTextField leftTrimSample, leftTrimTime, rightTrimSample, rightTrimTime;
+	private JLabel lblScaleX, lblMaxY, lblMinY, lblScaleY, lblHz;
+	private JToggleButton tglbtnLeftTrim, tglbtnRightTrim;
+	private JSpinner scaleX, scaleY, freqSpinner;
+	private JButton btnScaleToFit, btnSaveData;
+	private DraggableLine leftLine, rightLine;
+	private JTextField maxVal, minVal;
 	private JScrollPane scrollPane;
 	private double yScale=1, xScale=1;
-	private JPanel xPanel, valueRanges;
-	private JLabel lblScaleX, lblMaxY, lblMinY, lblScaleY;
-	private JSpinner scaleX, scaleY;
-	private Data data = new Data();
-	private JTextField maxVal;
-	private JTextField minVal;
-	JButton btnScaleToFit;
-	private DraggableLine leftLine, rightLine;
-	private JPanel panel;
-	private JToggleButton tglbtnLeftTrim;
-	private JToggleButton tglbtnRightTrim;
-	private JLabel lblHz;
-	private JSpinner freqSpinner;
-	private JTextField leftTrimSample;
-	private JTextField leftTrimTime;
-	private JTextField rightTrimSample;
-	private JTextField rightTrimTime;
 	private boolean dataLoaded = false;
-	private JButton btnSaveData;
-	private JPanel panel_1;
-	private JPanel panel_2;
+	private Data data = new Data();
 	
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -89,7 +76,6 @@ public class DataTrimmerGUI extends JFrame {
 				Graphics2D g = (Graphics2D) g1;
 				g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 				g.setFont(new Font("Arial", Font.PLAIN, 12));
-				
 				
 				if (data.matrix == null || data.matrix.isEmpty()) {
 					g.setColor(Color.black);
@@ -194,6 +180,12 @@ public class DataTrimmerGUI extends JFrame {
 		});
 		
 		btnSaveData = new JButton("Save Data");
+		btnSaveData.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				
+			}
+		});
 		btnSaveData.setEnabled(false);
 		panel_1.add(btnSaveData);
 		
@@ -206,7 +198,6 @@ public class DataTrimmerGUI extends JFrame {
 		
 		freqSpinner = new JSpinner();
 		panel_2.add(freqSpinner, BorderLayout.CENTER);
-		//freqSpinner.setPreferredSize(new Dimension(50,20));
 		freqSpinner.setModel(new SpinnerNumberModel(new Integer(128), new Integer(1), null, new Integer(1)));
 		btnLoadData.addActionListener(new ActionListener() {
 			@Override
