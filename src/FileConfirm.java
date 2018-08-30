@@ -15,6 +15,7 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
 public class FileConfirm extends JDialog {
 
@@ -26,7 +27,9 @@ public class FileConfirm extends JDialog {
 	public FileConfirm(JFrame parent, Data data) {
 		super(parent, Dialog.ModalityType.APPLICATION_MODAL);
 		
+		FileNameExtensionFilter filter = new FileNameExtensionFilter("csv", "csv");
 		JFileChooser fc = new JFileChooser(".");
+		fc.setFileFilter(filter);
 		fc.showOpenDialog(this);
 		File f = fc.getSelectedFile();
 		if (!f.exists()) {
