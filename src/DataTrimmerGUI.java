@@ -12,8 +12,14 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.util.Arrays;
 
 import javax.swing.JButton;
+import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -183,6 +189,30 @@ public class DataTrimmerGUI extends JFrame {
 		btnSaveData.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				
+				SaveFileDialog dialog = new SaveFileDialog(DataTrimmerGUI.this, data, leftLine, rightLine);
+				dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
+				dialog.setVisible(true);
+				
+//				try {
+//					FileWriter fw = new FileWriter(new File("new_eeg.csv"));
+//					
+//					for (int i = 0; i < data.channels; i++) {
+//						String s = "";
+//						
+//						double[] d = data.matrix.get(i);
+//						for (int j = 0; j < data.dataPoints; j++) {
+//							s+= d[j];
+//							if (j != data.dataPoints-1) s+= ",";
+//						}
+//						
+//						fw.write(s + "\n");
+//					}
+//					
+//					fw.close();
+//				} catch (IOException e1) {
+//					e1.printStackTrace();
+//				}
 				
 			}
 		});
