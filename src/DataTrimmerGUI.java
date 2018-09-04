@@ -12,14 +12,8 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.util.Arrays;
 
 import javax.swing.JButton;
-import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
@@ -133,8 +127,24 @@ public class DataTrimmerGUI extends JFrame {
 			@Override
 			public void mouseReleased(MouseEvent e) {
 				if (dataLoaded) {
-					leftLine.dragging = false;
-					rightLine.dragging = false;
+					if (leftLine.dragging) {
+						leftLine.dragging = false;
+						if (leftLine.getXReal() < 0) {
+							leftLine.setXReal(0, xScale);
+							leftTrimSample.setText(0 + "");
+							leftTrimTime.setText(String.format("%.3f sec", 0.0));
+							repaint();
+						}
+					}
+					if (rightLine.dragging) {
+						rightLine.dragging = false;
+						if (rightLine.getXReal() > data.dataPoints) {
+							rightLine.setXReal(data.dataPoints, xScale);
+							rightTrimSample.setText(data.dataPoints + "");
+							rightTrimTime.setText(String.format("%.3f sec", data.dataPoints/(float)(int)freqSpinner.getValue()));
+							repaint();
+						}
+					}
 				}
 			}
 			
@@ -189,31 +199,8 @@ public class DataTrimmerGUI extends JFrame {
 		btnSaveData.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				
 				SaveFileDialog dialog = new SaveFileDialog(DataTrimmerGUI.this, data, leftLine, rightLine);
-				dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
 				dialog.setVisible(true);
-				
-//				try {
-//					FileWriter fw = new FileWriter(new File("new_eeg.csv"));
-//					
-//					for (int i = 0; i < data.channels; i++) {
-//						String s = "";
-//						
-//						double[] d = data.matrix.get(i);
-//						for (int j = 0; j < data.dataPoints; j++) {
-//							s+= d[j];
-//							if (j != data.dataPoints-1) s+= ",";
-//						}
-//						
-//						fw.write(s + "\n");
-//					}
-//					
-//					fw.close();
-//				} catch (IOException e1) {
-//					e1.printStackTrace();
-//				}
-				
 			}
 		});
 		btnSaveData.setEnabled(false);
@@ -227,6 +214,13 @@ public class DataTrimmerGUI extends JFrame {
 		panel_2.add(lblHz, BorderLayout.WEST);
 		
 		freqSpinner = new JSpinner();
+		freqSpinner.addChangeListener(new ChangeListener() {
+			@Override
+			public void stateChanged(ChangeEvent e) {
+				leftTrimTime.setText(String.format("%.3f sec", leftLine.getXReal()/(float)(int)freqSpinner.getValue()));
+				rightTrimTime.setText(String.format("%.3f sec", rightLine.getXReal()/(float)(int)freqSpinner.getValue()));
+			}
+		});
 		panel_2.add(freqSpinner, BorderLayout.CENTER);
 		freqSpinner.setModel(new SpinnerNumberModel(new Integer(128), new Integer(1), null, new Integer(1)));
 		btnLoadData.addActionListener(new ActionListener() {
