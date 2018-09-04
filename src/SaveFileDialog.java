@@ -24,7 +24,6 @@ public class SaveFileDialog extends JDialog {
 
 	public SaveFileDialog(JFrame parent, Data data, DraggableLine left, DraggableLine right) {
 		super(parent, Dialog.ModalityType.APPLICATION_MODAL);
-		setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);
 		setBounds(100, 100, 450, 157);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setLayout(new FlowLayout());
