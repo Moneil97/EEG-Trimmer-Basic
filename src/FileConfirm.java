@@ -22,13 +22,13 @@ public class FileConfirm extends JDialog {
 	private static final long serialVersionUID = 1L;
 	private final JPanel contentPanel = new JPanel();
 	String selection;
-	private JLabel dataPointsLabel, channelsLabel;
+	private JLabel dataPointsLabel;
 
 	public FileConfirm(JFrame parent, Data data) throws EarlyCloseException {
 		super(parent, Dialog.ModalityType.APPLICATION_MODAL);
 		setDefaultCloseOperation(JDialog.DO_NOTHING_ON_CLOSE);//.DISPOSE_ON_CLOSE);
 		
-		FileNameExtensionFilter filter = new FileNameExtensionFilter("csv", "csv");
+		FileNameExtensionFilter filter = new FileNameExtensionFilter("edf", "edf");
 		JFileChooser fc = new JFileChooser(".");
 		fc.setFileFilter(filter);
 		fc.showOpenDialog(this);
@@ -51,16 +51,6 @@ public class FileConfirm extends JDialog {
 		JPanel panel = new JPanel();
 		contentPanel.add(panel, BorderLayout.SOUTH);
 		panel.setLayout(new GridLayout(0, 1, 0, 0));
-		
-		JPanel panel_1 = new JPanel();
-		panel.add(panel_1);
-		channelsLabel = new JLabel(data.channels + "");
-		channelsLabel.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		panel_1.add(channelsLabel);
-		
-		JLabel lblChannels = new JLabel("Channels");
-		lblChannels.setFont(new Font("Tahoma", Font.PLAIN, 20));
-		panel_1.add(lblChannels);
 
 		JPanel panel_2 = new JPanel();
 		panel.add(panel_2);
@@ -89,16 +79,6 @@ public class FileConfirm extends JDialog {
 		buttonPane.add(okButton);
 		getRootPane().setDefaultButton(okButton);
 	
-		JButton btnTranspose = new JButton("Transpose");
-		btnTranspose.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				data.transpose();
-				dataPointsLabel.setText(data.dataPoints + "");
-				channelsLabel.setText(data.channels + "");
-			}
-		});
-		buttonPane.add(btnTranspose);
 		JButton cancelButton = new JButton("Cancel");
 		cancelButton.setActionCommand("Cancel");
 		cancelButton.addActionListener(new ActionListener() {

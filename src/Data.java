@@ -1,34 +1,50 @@
 import java.io.File;
-import java.io.FileNotFoundException;
+import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.Scanner;
+
+import ru.mipt.edf.EDFParser;
+import ru.mipt.edf.EDFParserResult;
 
 public class Data{
 		protected List<double[]> matrix;
 		protected int dataMax, dataMin, channels, dataPoints;
+		protected EDFParserResult result;
 		
 		protected void loadData(File f) {
-			Scanner scan;
-			try {
-				scan = new Scanner(f);
-			} catch (FileNotFoundException e1) {
-				e1.printStackTrace();
-				return;
-			}
 			
-			matrix = new ArrayList<>();
-			while(scan.hasNextLine()) {
-				String line = scan.nextLine();
-				double[] rowValues = Arrays.stream(line.split(",")).mapToDouble(Double::parseDouble).toArray();
-				matrix.add(rowValues);
+			try {
+				FileInputStream fis = new FileInputStream(f);
+				result = EDFParser.parseEDF(fis);
+				fis.close();
+				matrix = new ArrayList<>();
+				
+				short[][] signal = result.getSignal().getDigitalValues();
+
+				//ALL = COUNTER,INTERPOLATED,AF3,F7,F3,FC5,T7,P7,O1,O2,P8,T8,FC6,F4,F8,AF4,RAW_CQ,GYROX,GYROY,MARKER,SYNC,TIME_STAMP_s,TIME_STAMP_ms,CQ_AF3,CQ_F7,CQ_F3,CQ_FC5,CQ_T7,CQ_P7,CQ_O1,CQ_O2,CQ_P8,CQ_T8,CQ_FC6,CQ_F4,CQ_F8,CQ_AF4,CQ_CMS          CQ_DRL
+				//Selected = AF3,F7,F3,FC5,T7,P7,O1,O2,P8,T8,FC6,F4,F8,AF4
+				int[] is = {2,3,4,5,6,7,8,9,10,11,12,13,14,15};
+				
+				for (int i : is)
+					matrix.add(shortToDouble(signal[i]));
+				
+				dataMax = getMaxValue(matrix);
+				dataMin = getMinValue(matrix);
+				channels = matrix.size();
+				dataPoints = matrix.get(0).length;
+				
+			} catch (IOException e) {
+				e.printStackTrace();
 			}
-			scan.close();
-			dataMax = getMaxValue(matrix);
-			dataMin = getMinValue(matrix);
-			channels = matrix.size();
-			dataPoints = matrix.get(0).length;
+				
+		}
+		
+		private double[] shortToDouble(short[] s) {
+			double d[] = new double[s.length];
+			for (int i = 0; i < s.length; i++) 
+				d[i] = s[i];
+			return d;
 		}
 		
 		private int getMaxValue(List<double[]> list) {

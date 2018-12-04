@@ -28,7 +28,7 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.event.ChangeEvent;
 import javax.swing.event.ChangeListener;
 
-public class DataTrimmerGUI extends JFrame {
+public class EDFTrimmerGUI extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 	private Color[] colors = {Color.white, Color.red, Color.blue, Color.orange, Color.cyan, Color.green, Color.magenta, Color.pink};
@@ -49,7 +49,7 @@ public class DataTrimmerGUI extends JFrame {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					DataTrimmerGUI frame = new DataTrimmerGUI();
+					EDFTrimmerGUI frame = new EDFTrimmerGUI();
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -58,7 +58,7 @@ public class DataTrimmerGUI extends JFrame {
 		});
 	}
 
-	public DataTrimmerGUI() {
+	public EDFTrimmerGUI() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 1049, 700);
 		setMinimumSize(new Dimension(890, 500));
@@ -199,7 +199,7 @@ public class DataTrimmerGUI extends JFrame {
 		btnSaveData.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				SaveFileDialog dialog = new SaveFileDialog(DataTrimmerGUI.this, data, leftLine, rightLine);
+				SaveFileDialog dialog = new SaveFileDialog(EDFTrimmerGUI.this, data, leftLine, rightLine);
 				dialog.setVisible(true);
 			}
 		});
@@ -227,7 +227,7 @@ public class DataTrimmerGUI extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				try {
-					FileConfirm confirm = new FileConfirm(DataTrimmerGUI.this, data);
+					FileConfirm confirm = new FileConfirm(EDFTrimmerGUI.this, data);
 					confirm.setVisible(true);
 					if (confirm.selection.equals("OK")) {
 						maxVal.setText(data.dataMax + "");
