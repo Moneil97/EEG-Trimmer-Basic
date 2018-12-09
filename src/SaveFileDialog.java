@@ -83,7 +83,6 @@ public class SaveFileDialog extends JDialog {
 		FileNameExtensionFilter filter = new FileNameExtensionFilter("edf", "edf");
 		fc.setFileFilter(filter);
 		fc.showSaveDialog(this);
-		FileOutputStream fout = new FileOutputStream(fc.getSelectedFile());
 		
 		EDFSignal signal = data.result.getSignal();
 		EDFHeader header = data.result.getHeader();
@@ -93,19 +92,22 @@ public class SaveFileDialog extends JDialog {
 		
 		if ((rightTrim-leftTrim) % header.getNumberOfSamples()[0] != 0) {
 			JOptionPane.showMessageDialog(SaveFileDialog.this, "Must be a multiple of " + header.getNumberOfSamples()[0], "Save", JOptionPane.INFORMATION_MESSAGE);
+			return;
 		}
 		
-//		//Fix header
+		//Fix header
 		header.numberOfRecords = (rightTrim-leftTrim)/header.getNumberOfSamples()[0];
-//		
-//		//Trim the signal
+		
+		//Trim the signal
 		short[][] vals = signal.getDigitalValues();
 		
 		for (int i = 0; i < vals.length; i++)
 			vals[i] = Arrays.copyOfRange(vals[i], leftTrim, rightTrim);
 		
+		FileOutputStream fout = new FileOutputStream(fc.getSelectedFile());
 		EDFWriter.writeIntoOutputStream(header, fout);
 		EDFWriter.writeIntoOutputStream(signal, header, fout);
+		fout.close();
 	}
 	
 }

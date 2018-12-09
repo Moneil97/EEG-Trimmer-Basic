@@ -7,6 +7,7 @@ public class DraggableLine {
 	boolean enabled = false;
 	private int xDrawn, xReal;
 	boolean dragging = false, left;
+	private double lastXscale;
 	
 	public DraggableLine(int x, double xScale, boolean left) {
 		setXDrawn(x, xScale);
@@ -35,16 +36,24 @@ public class DraggableLine {
 	}
 	
 	public void setXDrawn(int x, double xScale) {
+		lastXscale = xScale;
 		xReal =  (int)(x*xScale);
 		xDrawn = (int)(xReal/xScale);
 	}
 	
 	public void setXReal(int x, double xScale) {
+		lastXscale = xScale;
 		xReal = x;
 		xDrawn = (int)(x/xScale);
 	}
 	
+	public void setXReal(int x) {
+		xReal = x;
+		xDrawn = (int)(x/lastXscale);
+	}
+	
 	public void changeScale(double xScale) {
+		lastXscale = xScale;
 		xDrawn = (int)(xReal/xScale);
 	}
 	

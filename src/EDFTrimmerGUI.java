@@ -199,6 +199,23 @@ public class EDFTrimmerGUI extends JFrame {
 		btnSaveData.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				
+				int leftTrim = (leftLine.enabled? leftLine.getXReal():0);
+				int rightTrim = (rightLine.enabled? rightLine.getXReal():data.dataPoints);
+				int freq = data.result.getHeader().getNumberOfSamples()[0];
+				if ((rightTrim-leftTrim) % freq != 0) {
+					RoundingDialog rd = new RoundingDialog(EDFTrimmerGUI.this, data, leftLine, rightLine, freq);
+					rd.setVisible(true);
+					
+					//update graphs with new line values
+					leftTrimSample.setText(leftLine.getXReal() + "");
+					leftTrimTime.setText(String.format("%.3f sec", leftLine.getXReal()/(float)(int)freqSpinner.getValue()));
+					rightTrimSample.setText(rightLine.getXReal() + "");
+					rightTrimTime.setText(String.format("%.3f sec", rightLine.getXReal()/(float)(int)freqSpinner.getValue()));
+					repaint();
+				}
+				
+				
 				SaveFileDialog dialog = new SaveFileDialog(EDFTrimmerGUI.this, data, leftLine, rightLine);
 				dialog.setVisible(true);
 			}
@@ -217,8 +234,10 @@ public class EDFTrimmerGUI extends JFrame {
 		freqSpinner.addChangeListener(new ChangeListener() {
 			@Override
 			public void stateChanged(ChangeEvent e) {
-				leftTrimTime.setText(String.format("%.3f sec", leftLine.getXReal()/(float)(int)freqSpinner.getValue()));
-				rightTrimTime.setText(String.format("%.3f sec", rightLine.getXReal()/(float)(int)freqSpinner.getValue()));
+				if (leftLine != null) 
+					leftTrimTime.setText(String.format("%.3f sec", leftLine.getXReal()/(float)(int)freqSpinner.getValue()));
+				if (rightLine != null) 
+					rightTrimTime.setText(String.format("%.3f sec", rightLine.getXReal()/(float)(int)freqSpinner.getValue()));
 			}
 		});
 		panel_2.add(freqSpinner, BorderLayout.CENTER);
