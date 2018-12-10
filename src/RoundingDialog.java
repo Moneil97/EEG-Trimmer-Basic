@@ -13,7 +13,7 @@ import javax.swing.JPanel;
 public class RoundingDialog extends JDialog{
 	
 	private static final long serialVersionUID = 1L;
-	int badExit = 0;
+	boolean badExit = false;
 
 	public RoundingDialog(JFrame parent, Data data, DraggableLine left, DraggableLine right, int freq) {
 		super(parent, Dialog.ModalityType.APPLICATION_MODAL);
@@ -98,7 +98,7 @@ public class RoundingDialog extends JDialog{
 		cancel.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				badExit = 1;
+				badExit = true;
 				close();
 			}
 		});

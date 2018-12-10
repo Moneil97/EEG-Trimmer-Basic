@@ -9,7 +9,7 @@ import ru.mipt.edf.EDFParserResult;
 
 public class Data{
 		protected List<double[]> matrix;
-		protected int dataMax, dataMin, channels, dataPoints;
+		protected int dataMax, dataMin, channels, dataPoints, freq;
 		protected EDFParserResult result;
 		
 		protected void loadData(File f) {
@@ -33,6 +33,7 @@ public class Data{
 				dataMin = getMinValue(matrix);
 				channels = matrix.size();
 				dataPoints = matrix.get(0).length;
+				freq = result.getHeader().getNumberOfSamples()[0];
 				
 			} catch (IOException e) {
 				e.printStackTrace();

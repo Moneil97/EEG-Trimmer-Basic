@@ -110,15 +110,11 @@ public class EDFTrimmerGUI extends JFrame {
 				if (dataLoaded) {
 					if (leftLine.dragging) {
 						leftLine.setXDrawn(e.getX(), xScale);
-						leftTrimSample.setText(leftLine.getXReal() + "");
-						leftTrimTime.setText(String.format("%.3f sec", leftLine.getXReal()/(float)(int)freqSpinner.getValue()));
-						repaint();
+						updateLeftTrimData();
 					}
 					else if (rightLine.dragging) {
 						rightLine.setXDrawn(e.getX(), xScale);
-						rightTrimSample.setText(rightLine.getXReal() + "");
-						rightTrimTime.setText(String.format("%.3f sec", rightLine.getXReal()/(float)(int)freqSpinner.getValue()));
-						repaint();
+						updateRightTrimData();
 					}
 				}
 			}
@@ -131,18 +127,14 @@ public class EDFTrimmerGUI extends JFrame {
 						leftLine.dragging = false;
 						if (leftLine.getXReal() < 0) {
 							leftLine.setXReal(0, xScale);
-							leftTrimSample.setText(0 + "");
-							leftTrimTime.setText(String.format("%.3f sec", 0.0));
-							repaint();
+							updateLeftTrimData();
 						}
 					}
 					if (rightLine.dragging) {
 						rightLine.dragging = false;
 						if (rightLine.getXReal() > data.dataPoints) {
 							rightLine.setXReal(data.dataPoints, xScale);
-							rightTrimSample.setText(data.dataPoints + "");
-							rightTrimTime.setText(String.format("%.3f sec", data.dataPoints/(float)(int)freqSpinner.getValue()));
-							repaint();
+							updateRightTrimData();
 						}
 					}
 				}
@@ -206,15 +198,11 @@ public class EDFTrimmerGUI extends JFrame {
 				if ((rightTrim-leftTrim) % freq != 0) {
 					RoundingDialog rd = new RoundingDialog(EDFTrimmerGUI.this, data, leftLine, rightLine, freq);
 					rd.setVisible(true);
-					
+					if (rd.badExit)
+						return;
 					//update graphs with new line values
-					leftTrimSample.setText(leftLine.getXReal() + "");
-					leftTrimTime.setText(String.format("%.3f sec", leftLine.getXReal()/(float)(int)freqSpinner.getValue()));
-					rightTrimSample.setText(rightLine.getXReal() + "");
-					rightTrimTime.setText(String.format("%.3f sec", rightLine.getXReal()/(float)(int)freqSpinner.getValue()));
-					repaint();
+					updateTrimData();
 				}
-				
 				
 				SaveFileDialog dialog = new SaveFileDialog(EDFTrimmerGUI.this, data, leftLine, rightLine);
 				dialog.setVisible(true);
@@ -251,6 +239,7 @@ public class EDFTrimmerGUI extends JFrame {
 					if (confirm.selection.equals("OK")) {
 						maxVal.setText(data.dataMax + "");
 						minVal.setText(data.dataMin + "");
+						freqSpinner.setValue(data.freq);
 						leftLine = new DraggableLine(0, xScale, true);
 						rightLine = new DraggableLine(centerPanel.getWidth(), xScale, false);
 						scaleToFitWindow();
@@ -262,6 +251,7 @@ public class EDFTrimmerGUI extends JFrame {
 						tglbtnRightTrim.setEnabled(true);
 						btnSaveData.setEnabled(true);
 						dataLoaded = true;
+						
 					}
 					else if (confirm.selection.equals("Cancel")) {
 						btnScaleToFit.setEnabled(false);
@@ -274,10 +264,8 @@ public class EDFTrimmerGUI extends JFrame {
 					}
 					tglbtnLeftTrim.setSelected(false);
 					tglbtnRightTrim.setSelected(false);
-					leftTrimSample.setText("");
-					leftTrimTime.setText("");
-					rightTrimSample.setText("");
-					rightTrimTime.setText("");
+					//update graphs with new line values
+					updateTrimData();
 				} catch (EarlyCloseException e1) {
 					//JOptionPane.showMessageDialog(DataTrimmerGUI.this, "Did not load a file");
 				}
@@ -292,7 +280,6 @@ public class EDFTrimmerGUI extends JFrame {
 		
 		lblScaleX = new JLabel("Scale 1/X:");
 		xPanel.add(lblScaleX);
-		
 		
 		SpinnerModel modelX = new SpinnerNumberModel(1, .01, 100, .5);
 		scaleX = new JSpinner(modelX);
@@ -359,8 +346,6 @@ public class EDFTrimmerGUI extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				leftLine.enabled = tglbtnLeftTrim.isSelected();
-				leftTrimSample.setText(leftLine.getXReal() + "");
-				leftTrimTime.setText(String.format("%.3f sec", leftLine.getXReal()/(float)(int)freqSpinner.getValue()));
 				repaint();
 			}
 		});
@@ -372,8 +357,6 @@ public class EDFTrimmerGUI extends JFrame {
 			@Override
 			public void actionPerformed(ActionEvent e) {
 				rightLine.enabled = tglbtnRightTrim.isSelected();
-				rightTrimSample.setText(rightLine.getXReal() + "");
-				rightTrimTime.setText(String.format("%.3f sec", rightLine.getXReal()/(float)(int)freqSpinner.getValue()));
 				repaint();
 			}
 		});
@@ -398,6 +381,24 @@ public class EDFTrimmerGUI extends JFrame {
 		panel.add(rightTrimTime);
 		rightTrimTime.setEditable(false);
 		rightTrimTime.setColumns(10);
+	}
+	
+	private void updateLeftTrimData() {
+		leftTrimSample.setText(leftLine.getXReal() + "");
+		leftTrimTime.setText(String.format("%.3f sec", leftLine.getXReal()/(float)(int)freqSpinner.getValue()));
+		repaint();
+	}
+	
+	private void updateRightTrimData() {
+		rightTrimSample.setText(rightLine.getXReal() + "");
+		rightTrimTime.setText(String.format("%.3f sec", rightLine.getXReal()/(float)(int)freqSpinner.getValue()));
+		repaint();
+	}
+	
+	private void updateTrimData() {
+		//update graphs with new line values
+		updateLeftTrimData();
+		updateRightTrimData();
 	}
 	
 	private void updateSpinners(double xScale, double yScale ) {
