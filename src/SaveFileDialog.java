@@ -6,7 +6,6 @@ import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
 import java.io.FileOutputStream;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 
@@ -21,7 +20,6 @@ import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
 
 import ru.mipt.edf.EDFHeader;
-import ru.mipt.edf.EDFParserResult;
 import ru.mipt.edf.EDFSignal;
 import ru.mipt.edf.EDFWriter;
 
@@ -32,7 +30,8 @@ public class SaveFileDialog extends JDialog {
 
 	public SaveFileDialog(JFrame parent, Data data, DraggableLine left, DraggableLine right) {
 		super(parent, Dialog.ModalityType.APPLICATION_MODAL);
-		setBounds(100, 100, 450, 157);
+		setBounds(100, 100, 600, 157);
+		setLocationRelativeTo(null);
 		getContentPane().setLayout(new BorderLayout());
 		contentPanel.setLayout(new FlowLayout());
 		contentPanel.setBorder(new EmptyBorder(5, 5, 5, 5));
@@ -41,8 +40,8 @@ public class SaveFileDialog extends JDialog {
 		int leftTrim = (left.enabled? left.getXReal():0);
 		int rightTrim = (right.enabled? right.getXReal():data.dataPoints);
 		
-		JLabel lblRowsXCols = new JLabel("The new file will contain: " + (rightTrim-leftTrim) + " (" + (left.enabled? left.getXReal():0) + " - " + (right.enabled? right.getXReal():data.dataPoints) + ")" + " data points");
-		lblRowsXCols.setFont(new Font("Tahoma", Font.PLAIN, 30));
+		JLabel lblRowsXCols = new JLabel("The new file will contain: " + (rightTrim-leftTrim) + " (" + (left.enabled? left.getXReal():0) + " - " + (right.enabled? right.getXReal():data.dataPoints) + ")" + " samples");
+		lblRowsXCols.setFont(new Font("Tahoma", Font.PLAIN, 20));
 		contentPanel.add(lblRowsXCols);
 		
 		JPanel buttonPane = new JPanel();
