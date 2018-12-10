@@ -5,6 +5,7 @@ import java.awt.Font;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.WindowEvent;
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.Arrays;
@@ -91,7 +92,7 @@ public class SaveFileDialog extends JDialog {
 		
 		if ((rightTrim-leftTrim) % header.getNumberOfSamples()[0] != 0) {
 			JOptionPane.showMessageDialog(SaveFileDialog.this, "Must be a multiple of " + header.getNumberOfSamples()[0], "Save", JOptionPane.INFORMATION_MESSAGE);
-			return;
+			throw new IOException();
 		}
 		
 		//Fix header
@@ -103,7 +104,11 @@ public class SaveFileDialog extends JDialog {
 		for (int i = 0; i < vals.length; i++)
 			vals[i] = Arrays.copyOfRange(vals[i], leftTrim, rightTrim);
 		
-		FileOutputStream fout = new FileOutputStream(fc.getSelectedFile());
+		File f = fc.getSelectedFile();
+		if (!f.getName().endsWith(".edf"))
+			f = new File(f.getPath() + ".edf");
+			
+		FileOutputStream fout = new FileOutputStream(f);
 		EDFWriter.writeIntoOutputStream(header, fout);
 		EDFWriter.writeIntoOutputStream(signal, header, fout);
 		fout.close();

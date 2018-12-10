@@ -54,6 +54,7 @@ public class RoundingDialog extends JDialog{
 		upLeft.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				left.enabled = true;
 				left.setXReal(leftTrim-toAdd);
 				close();
 			}
@@ -66,6 +67,7 @@ public class RoundingDialog extends JDialog{
 		upRight.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				right.enabled = true;
 				right.setXReal(rightTrim+toAdd);
 				close();
 			}
@@ -87,6 +89,7 @@ public class RoundingDialog extends JDialog{
 		downsLeft.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				left.enabled = true;
 				left.setXReal(leftTrim+toRemove);
 				close();
 			}
@@ -98,6 +101,7 @@ public class RoundingDialog extends JDialog{
 		downsRight.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
+				right.enabled = true;
 				right.setXReal(rightTrim-toRemove);
 				close();
 			}
