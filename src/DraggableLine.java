@@ -27,12 +27,9 @@ public class DraggableLine {
 	}
 
 	public void checkMouse(int mouseX) {
-		if (enabled) {
-			if (xDrawn + tolerance > mouseX && xDrawn - tolerance < mouseX) {
-				System.out.println("line grabbed");
+		if (enabled) 
+			if (xDrawn + tolerance > mouseX && xDrawn - tolerance < mouseX)
 				dragging = true;
-			}
-		}
 	}
 	
 	public void setXDrawn(int x, double xScale) {
