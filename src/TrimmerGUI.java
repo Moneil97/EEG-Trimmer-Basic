@@ -13,6 +13,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
 import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.util.Arrays;
 
 import javax.swing.JButton;
 import javax.swing.JFileChooser;
@@ -25,6 +28,10 @@ import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 import javax.swing.border.EmptyBorder;
 import javax.swing.filechooser.FileNameExtensionFilter;
+
+import ru.mipt.edf.EDFHeader;
+import ru.mipt.edf.EDFSignal;
+import ru.mipt.edf.EDFWriter;
 
 public class TrimmerGUI extends JFrame {
 
@@ -222,8 +229,13 @@ public class TrimmerGUI extends JFrame {
 					repaint();
 				}
 				
-				SaveFileDialog dialog = new SaveFileDialog(TrimmerGUI.this, data, leftLine, rightLine);
-				dialog.setVisible(true);
+				try {
+					saveFile(data, leftLine, rightLine);
+					JOptionPane.showMessageDialog(TrimmerGUI.this, "Save Succesful", "Save", JOptionPane.INFORMATION_MESSAGE);
+				} catch (Exception e1) {
+					e1.printStackTrace();
+					JOptionPane.showMessageDialog(TrimmerGUI.this, "Save Failed", "Save", JOptionPane.ERROR_MESSAGE);
+				}
 			}
 		});
 		btnSaveData.setEnabled(false);
@@ -375,5 +387,42 @@ public class TrimmerGUI extends JFrame {
 	private double getFitY() {
 		int height = scrollPane.getHeight()-20;
 		return ((double)(data.dataMax-data.dataMin))/height;
+	}
+	
+	private void saveFile(Data data, DraggableLine left, DraggableLine right) throws IOException {
+		
+		JFileChooser fc = new JFileChooser(".");
+		FileNameExtensionFilter filter = new FileNameExtensionFilter("edf", "edf");
+		fc.setFileFilter(filter);
+		fc.showSaveDialog(this);
+		
+		EDFSignal signal = data.result.getSignal();
+		EDFHeader header = data.result.getHeader();
+		
+		int leftTrim = (left.enabled? left.getXReal():0);
+		int rightTrim = (right.enabled? right.getXReal():data.dataPoints);
+		
+		if ((rightTrim-leftTrim) % header.getNumberOfSamples()[0] != 0) {
+			JOptionPane.showMessageDialog(TrimmerGUI.this, "Must be a multiple of " + header.getNumberOfSamples()[0], "Save", JOptionPane.INFORMATION_MESSAGE);
+			throw new IOException();
+		}
+		
+		//Fix header
+		header.numberOfRecords = (rightTrim-leftTrim)/header.getNumberOfSamples()[0];
+		
+		//Trim the signal
+		short[][] vals = signal.getDigitalValues();
+		
+		for (int i = 0; i < vals.length; i++)
+			vals[i] = Arrays.copyOfRange(vals[i], leftTrim, rightTrim);
+		
+		File f = fc.getSelectedFile();
+		if (!f.getName().endsWith(".edf"))
+			f = new File(f.getPath() + ".edf");
+			
+		FileOutputStream fout = new FileOutputStream(f);
+		EDFWriter.writeIntoOutputStream(header, fout);
+		EDFWriter.writeIntoOutputStream(signal, header, fout);
+		fout.close();
 	}
 }
