@@ -12,44 +12,43 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
+import java.io.File;
 
 import javax.swing.JButton;
+import javax.swing.JFileChooser;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSpinner;
 import javax.swing.JTextField;
 import javax.swing.JToggleButton;
-import javax.swing.SpinnerModel;
-import javax.swing.SpinnerNumberModel;
-import javax.swing.SwingConstants;
 import javax.swing.border.EmptyBorder;
-import javax.swing.event.ChangeEvent;
-import javax.swing.event.ChangeListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
 
-public class EDFTrimmerGUI extends JFrame {
+public class TrimmerGUI extends JFrame {
 
 	private static final long serialVersionUID = 1L;
-	private Color[] colors = {Color.white, Color.red, Color.blue, Color.orange, Color.cyan, Color.green, Color.magenta, Color.pink};
-	private JPanel contentPane, centerPanel, xPanel, valueRanges, panel, panel_1, panel_2;
-	private JTextField leftTrimSample, leftTrimTime, rightTrimSample, rightTrimTime;
-	private JLabel lblScaleX, lblMaxY, lblMinY, lblScaleY, lblHz;
+	private Color[] colors = {Color.black, Color.red, Color.blue, Color.orange, Color.cyan, Color.green, Color.magenta, Color.pink};
+	private JPanel contentPane, centerPanel, scalePanel, panel, panel_1;
+	private JTextField leftTrimTime, rightTrimTime;
+	private JLabel lblScaleX, lblScaleY;
 	private JToggleButton tglbtnLeftTrim, tglbtnRightTrim;
-	private JSpinner scaleX, scaleY, freqSpinner;
+	private JTextField freqBox;
 	private JButton btnScaleToFit, btnSaveData;
 	private DraggableLine leftLine, rightLine;
-	private JTextField maxVal, minVal;
 	private JScrollPane scrollPane;
 	private double yScale=1, xScale=1;
 	private boolean dataLoaded = false;
+	private JButton plusButtonX, minusButtonX, plusButtonY, minusButtonY;
+	private JButton[] scaleButtons;
 	private Data data = new Data();
 	
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
-					EDFTrimmerGUI frame = new EDFTrimmerGUI();
+					TrimmerGUI frame = new TrimmerGUI();
 					frame.setVisible(true);
 				} catch (Exception e) {
 					e.printStackTrace();
@@ -58,7 +57,7 @@ public class EDFTrimmerGUI extends JFrame {
 		});
 	}
 
-	public EDFTrimmerGUI() {
+	public TrimmerGUI() {
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 1049, 700);
 		setMinimumSize(new Dimension(890, 500));
@@ -108,14 +107,11 @@ public class EDFTrimmerGUI extends JFrame {
 			@Override
 			public void mouseDragged(MouseEvent e) {
 				if (dataLoaded) {
-					if (leftLine.dragging) {
+					if (leftLine.dragging) 
 						leftLine.setXDrawn(e.getX(), xScale);
-						updateLeftTrimData();
-					}
-					else if (rightLine.dragging) {
+					else if (rightLine.dragging) 
 						rightLine.setXDrawn(e.getX(), xScale);
-						updateRightTrimData();
-					}
+					updateTrimData();
 				}
 			}
 		});
@@ -127,16 +123,15 @@ public class EDFTrimmerGUI extends JFrame {
 						leftLine.dragging = false;
 						if (leftLine.getXReal() < 0) {
 							leftLine.setXReal(0, xScale);
-							updateLeftTrimData();
 						}
 					}
 					if (rightLine.dragging) {
 						rightLine.dragging = false;
 						if (rightLine.getXReal() > data.dataPoints) {
 							rightLine.setXReal(data.dataPoints, xScale);
-							updateRightTrimData();
 						}
 					}
+					updateTrimData();
 				}
 			}
 			
@@ -195,153 +190,140 @@ public class EDFTrimmerGUI extends JFrame {
 				int leftTrim = (leftLine.enabled? leftLine.getXReal():0);
 				int rightTrim = (rightLine.enabled? rightLine.getXReal():data.dataPoints);
 				int freq = data.result.getHeader().getNumberOfSamples()[0];
+				int numSelected = rightTrim-leftTrim;
+				int toRemove =  numSelected % freq;
+				int toAdd = freq - toRemove;
 				
 				//ensure data samples are a multiple of the frequency
 				if ((rightTrim-leftTrim) % freq != 0) {
-					RoundingDialog rd = new RoundingDialog(EDFTrimmerGUI.this, data, leftLine, rightLine, freq);
-					rd.setVisible(true);
-					if (rd.badExit)
+					
+					if ((leftTrim-toAdd) >= 0) {
+						leftLine.enabled = true;
+						leftLine.setXReal(leftTrim-toAdd);
+					}
+					else if ((rightTrim+toAdd) < data.dataPoints) {
+						rightLine.enabled = true;
+						rightLine.setXReal(rightTrim+toAdd);
+					}
+					else if ((leftTrim+toRemove) < rightTrim) {
+						leftLine.enabled = true;
+						leftLine.setXReal(leftTrim+toRemove);
+					}
+					else if (leftTrim < (rightTrim-toRemove)) {
+						rightLine.enabled = true;
+						rightLine.setXReal(rightTrim-toRemove);
+					}
+					else {
+						JOptionPane.showMessageDialog(TrimmerGUI.this, "Failed to find rounding point", "Rounding Error", JOptionPane.ERROR_MESSAGE);
 						return;
-					//update graphs with new line values
+					}
+					
 					updateTrimData();
+					repaint();
 				}
 				
-				SaveFileDialog dialog = new SaveFileDialog(EDFTrimmerGUI.this, data, leftLine, rightLine);
+				SaveFileDialog dialog = new SaveFileDialog(TrimmerGUI.this, data, leftLine, rightLine);
 				dialog.setVisible(true);
 			}
 		});
 		btnSaveData.setEnabled(false);
 		panel_1.add(btnSaveData);
 		
-		panel_2 = new JPanel();
-		panel_1.add(panel_2);
-		panel_2.setLayout(new BorderLayout(0, 0));
 		
-		lblHz = new JLabel(" Hz:");
-		panel_2.add(lblHz, BorderLayout.WEST);
-		
-		freqSpinner = new JSpinner();
-		freqSpinner.addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent e) {
-				try {
-					updateTrimData();
-				}catch (Exception err) { }
-			}
-		});
-		panel_2.add(freqSpinner, BorderLayout.CENTER);
-		freqSpinner.setModel(new SpinnerNumberModel(new Integer(128), new Integer(1), null, new Integer(1)));
+		freqBox = new JTextField();
+		freqBox.setEditable(false);
+		panel_1.add(freqBox);
+
 		btnLoadData.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				try {
-					FileConfirm confirm = new FileConfirm(EDFTrimmerGUI.this, data);
-					confirm.setVisible(true);
-					if (confirm.selection.equals("OK")) {
-						maxVal.setText(data.dataMax + "");
-						minVal.setText(data.dataMin + "");
-						freqSpinner.setValue(data.freq);
-						leftLine = new DraggableLine(0, xScale, true);
-						rightLine = new DraggableLine(centerPanel.getWidth(), xScale, false);
-						scaleToFitWindow();
-						rightLine.setXReal(data.dataPoints, xScale);
-						btnScaleToFit.setEnabled(true);
-						scaleX.setEnabled(true);
-						scaleY.setEnabled(true);
-						tglbtnLeftTrim.setEnabled(true);
-						tglbtnRightTrim.setEnabled(true);
-						btnSaveData.setEnabled(true);
-						dataLoaded = true;
-						
-					}
-					else if (confirm.selection.equals("Cancel")) {
-						btnScaleToFit.setEnabled(false);
-						scaleX.setEnabled(false);
-						scaleY.setEnabled(false);
-						tglbtnLeftTrim.setEnabled(false);
-						tglbtnRightTrim.setEnabled(false);
-						btnSaveData.setEnabled(false);
-						dataLoaded = false;
-					}
+				
+				FileNameExtensionFilter filter = new FileNameExtensionFilter("edf", "edf");
+				JFileChooser fc = new JFileChooser(".");
+				fc.setFileFilter(filter);
+				fc.showOpenDialog(TrimmerGUI.this);
+				File f = fc.getSelectedFile();
+				
+				if (f != null && f.exists()) {
+					data.loadData(f);
+					freqBox.setText(data.freq + " Hz");
+					leftLine = new DraggableLine(0, xScale, true);
+					rightLine = new DraggableLine(centerPanel.getWidth(), xScale, false);
+					scaleToFitWindow();
+					rightLine.setXReal(data.dataPoints, xScale);
+					btnScaleToFit.setEnabled(true);
+					tglbtnLeftTrim.setEnabled(true);
+					tglbtnRightTrim.setEnabled(true);
+					btnSaveData.setEnabled(true);
+					dataLoaded = true;
 					tglbtnLeftTrim.setSelected(false);
 					tglbtnRightTrim.setSelected(false);
-					//update graphs with new line values
+					for (JButton b : scaleButtons)
+						b.setEnabled(true);
 					updateTrimData();
-				} catch (EarlyCloseException e1) {
-					//JOptionPane.showMessageDialog(DataTrimmerGUI.this, "Did not load a file");
 				}
 				
 				repaint();
 			}
 		});
 		
-		xPanel = new JPanel();
-		bottomPanel.add(xPanel);
-		xPanel.setLayout(new GridLayout(0, 2, 0, 0));
+		scalePanel = new JPanel();
+		bottomPanel.add(scalePanel);
+		scalePanel.setLayout(new GridLayout(0, 3, 0, 0));
 		
-		lblScaleX = new JLabel("Scale 1/X:");
-		xPanel.add(lblScaleX);
-		
-		SpinnerModel modelX = new SpinnerNumberModel(1, .01, 100, .5);
-		scaleX = new JSpinner(modelX);
-		scaleX.setEnabled(false);
-		scaleX.addChangeListener(new ChangeListener() {
+		ActionListener scaleListener = new ActionListener() {
 			@Override
-			public void stateChanged(ChangeEvent arg0) {
-				xScale = (double)scaleX.getValue();
+			public void actionPerformed(ActionEvent e) {
+				if (e.getSource() == plusButtonX)
+					xScale /= 1.25;
+				else if (e.getSource() == minusButtonX)
+					xScale = Math.min(xScale*1.25, getFitX()); //don't let it zoom out too far
+				else if (e.getSource() == plusButtonY) 
+					yScale /= 1.25;
+				else 
+					yScale *= 1.25;
+				
+//				System.out.println(xScale + " : " + yScale);
 				leftLine.changeScale(xScale);
 				rightLine.changeScale(xScale);
 				centerPanel.setPreferredSize(new Dimension((int)(data.dataPoints/xScale), (int)((data.dataMax-data.dataMin)/yScale)));
 				scrollPane.getViewport().revalidate();
 				repaint();
 			}
-		});
-		xPanel.add(scaleX);
+		};
 		
-		lblScaleY = new JLabel("Scale 1/Y:");
-		xPanel.add(lblScaleY);
+		plusButtonX = new JButton("+");
+		plusButtonX.addActionListener(scaleListener);
+		scalePanel.add(plusButtonX);
 		
-		SpinnerModel modelY = new SpinnerNumberModel(1, .01, 100, .5);
-		scaleY = new JSpinner(modelY);
-		scaleY.setEnabled(false);
-		scaleY.addChangeListener(new ChangeListener() {
-			@Override
-			public void stateChanged(ChangeEvent arg0) {
-				yScale = (double)scaleY.getValue();
-				centerPanel.setPreferredSize(new Dimension((int)(data.dataPoints/xScale), (int)((data.dataMax-data.dataMin)/yScale)));
-				scrollPane.getViewport().revalidate();
-				repaint();
-			}
-		});
-		xPanel.add(scaleY);
+		lblScaleX = new JLabel(" X Scale ");
+		scalePanel.add(lblScaleX);
 		
-		valueRanges = new JPanel();
-		bottomPanel.add(valueRanges);
-		valueRanges.setLayout(new GridLayout(0, 2, 0, 0));
+		minusButtonX = new JButton("-");
+		minusButtonX.addActionListener(scaleListener);
+		scalePanel.add(minusButtonX);
 		
-		lblMaxY = new JLabel("Greatest Value:");
-		valueRanges.add(lblMaxY);
+		plusButtonY = new JButton("+");
+		plusButtonY.addActionListener(scaleListener);
+		scalePanel.add(plusButtonY);
 		
-		maxVal = new JTextField();
-		maxVal.setHorizontalAlignment(SwingConstants.RIGHT);
-		maxVal.setEditable(false);
-		valueRanges.add(maxVal);
-		maxVal.setColumns(6);
+		lblScaleY = new JLabel(" Y Scale ");
+		scalePanel.add(lblScaleY);
 		
-		lblMinY = new JLabel("Least Value:");
-		valueRanges.add(lblMinY);
+		minusButtonY = new JButton("-");
+		minusButtonY.addActionListener(scaleListener);
+		scalePanel.add(minusButtonY);
 		
-		minVal = new JTextField();
-		minVal.setHorizontalAlignment(SwingConstants.RIGHT);
-		minVal.setEditable(false);
-		valueRanges.add(minVal);
-		minVal.setColumns(6);
+		scaleButtons = new JButton[]{plusButtonX, minusButtonX, plusButtonY, minusButtonY};
+		
+		for (JButton b : scaleButtons)
+			b.setEnabled(false);
 		
 		panel = new JPanel();
 		bottomPanel.add(panel);
-		panel.setLayout(new GridLayout(0, 3, 0, 0));
+		panel.setLayout(new GridLayout(0, 2, 0, 0));
 		
-		tglbtnLeftTrim = new JToggleButton("Left Trim");
+		tglbtnLeftTrim = new JToggleButton("Left Trimmer");
 		tglbtnLeftTrim.setEnabled(false);
 		tglbtnLeftTrim.addActionListener(new ActionListener() {
 			@Override
@@ -352,7 +334,7 @@ public class EDFTrimmerGUI extends JFrame {
 		});
 		panel.add(tglbtnLeftTrim);
 		
-		tglbtnRightTrim = new JToggleButton("Right Trim");
+		tglbtnRightTrim = new JToggleButton("Right Trimmer");
 		tglbtnRightTrim.setEnabled(false);
 		tglbtnRightTrim.addActionListener(new ActionListener() {
 			@Override
@@ -362,59 +344,36 @@ public class EDFTrimmerGUI extends JFrame {
 			}
 		});
 		
-		leftTrimSample = new JTextField();
-		panel.add(leftTrimSample);
-		leftTrimSample.setEditable(false);
-		leftTrimSample.setColumns(10);
-		
 		leftTrimTime = new JTextField();
 		panel.add(leftTrimTime);
 		leftTrimTime.setEditable(false);
 		leftTrimTime.setColumns(10);
 		panel.add(tglbtnRightTrim);
-		
-		rightTrimSample = new JTextField();
-		panel.add(rightTrimSample);
-		rightTrimSample.setEditable(false);
-		rightTrimSample.setColumns(10);
-		
+
 		rightTrimTime = new JTextField();
 		panel.add(rightTrimTime);
 		rightTrimTime.setEditable(false);
 		rightTrimTime.setColumns(10);
 	}
 	
-	private void updateLeftTrimData() {
-		leftTrimSample.setText("sample " + leftLine.getXReal());
-		leftTrimTime.setText(String.format("%.3f sec", leftLine.getXReal()/(float)(int)freqSpinner.getValue()));
-		repaint();
-	}
-	
-	private void updateRightTrimData() {
-		rightTrimSample.setText("sample " + rightLine.getXReal());
-		rightTrimTime.setText(String.format("%.3f sec", rightLine.getXReal()/(float)(int)freqSpinner.getValue()));
-		repaint();
-	}
-	
 	private void updateTrimData() {
-		//update graphs with new line values
-		updateLeftTrimData();
-		updateRightTrimData();
-	}
-	
-	private void updateSpinners(double xScale, double yScale ) {
-		scaleX.setValue(xScale);
-		scaleY.setValue(yScale);
+		leftTrimTime.setText(String.format("%.3f sec", leftLine.getXReal()/(float)data.freq));
+		rightTrimTime.setText(String.format("%.3f sec", rightLine.getXReal()/(float)data.freq));
+		repaint();
 	}
 	
 	private void scaleToFitWindow() {
-		int height = scrollPane.getHeight()-20;
-		int width = scrollPane.getWidth()-20;
-		
-		yScale = ((double)(data.dataMax-data.dataMin))/height;
-		xScale = ((double)data.dataPoints)/width;
-		
-		updateSpinners(xScale, yScale);
+		xScale = getFitX();
+		yScale = getFitY();
 	}
 	
+	private double getFitX() {
+		int width = scrollPane.getWidth()-20;
+		return ((double)data.dataPoints)/width;
+	}
+
+	private double getFitY() {
+		int height = scrollPane.getHeight()-20;
+		return ((double)(data.dataMax-data.dataMin))/height;
+	}
 }
