@@ -9,6 +9,8 @@ import java.awt.GridLayout;
 import java.awt.RenderingHints;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
+import java.awt.event.ComponentAdapter;
+import java.awt.event.ComponentEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -366,6 +368,13 @@ public class TrimmerGUI extends JFrame {
 		panel.add(rightTrimTime);
 		rightTrimTime.setEditable(false);
 		rightTrimTime.setColumns(10);
+		
+		addComponentListener(new ComponentAdapter() {
+			public void componentResized(ComponentEvent componentEvent) {
+				scrollPane.getViewport().revalidate();
+				repaint();
+		    }
+		});
 	}
 	
 	private void updateTrimData() {
@@ -377,6 +386,7 @@ public class TrimmerGUI extends JFrame {
 	private void scaleToFitWindow() {
 		xScale = getFitX();
 		yScale = getFitY();
+		centerPanel.setPreferredSize(new Dimension((int)(data.dataPoints/xScale), (int)((data.dataMax-data.dataMin)/yScale)));
 	}
 	
 	private double getFitX() {
