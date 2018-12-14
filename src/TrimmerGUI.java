@@ -52,6 +52,8 @@ public class TrimmerGUI extends JFrame {
 	private JButton plusButtonX, minusButtonX, plusButtonY, minusButtonY;
 	private JButton[] scaleButtons;
 	private Data data = new Data();
+	private String fileName = "";
+	private String lastLoadDir = ".", lastSaveDir = ".";
 	
 	public static void main(String[] args) {
 		EventQueue.invokeLater(new Runnable() {
@@ -232,8 +234,8 @@ public class TrimmerGUI extends JFrame {
 				}
 				
 				try {
-					saveFile(data, leftLine, rightLine);
-					JOptionPane.showMessageDialog(TrimmerGUI.this, "Save Succesful", "Save", JOptionPane.INFORMATION_MESSAGE);
+					if (saveFile(data, leftLine, rightLine) == 1)
+						JOptionPane.showMessageDialog(TrimmerGUI.this, "Save Succesful", "Save", JOptionPane.INFORMATION_MESSAGE);
 				} catch (Exception e1) {
 					e1.printStackTrace();
 					JOptionPane.showMessageDialog(TrimmerGUI.this, "Save Failed", "Save", JOptionPane.ERROR_MESSAGE);
@@ -253,12 +255,15 @@ public class TrimmerGUI extends JFrame {
 			public void actionPerformed(ActionEvent e) {
 				
 				FileNameExtensionFilter filter = new FileNameExtensionFilter("edf", "edf");
-				JFileChooser fc = new JFileChooser(".");
+				JFileChooser fc = new JFileChooser(lastLoadDir);
 				fc.setFileFilter(filter);
 				fc.showOpenDialog(TrimmerGUI.this);
 				File f = fc.getSelectedFile();
 				
 				if (f != null && f.exists()) {
+					lastLoadDir = f.getParent();
+					fileName = f.getName();
+					fileName = fileName.substring(0, fileName.lastIndexOf("."));
 					data.loadData(f);
 					freqBox.setText(data.freq + " Hz");
 					leftLine = new DraggableLine(0, xScale, true);
@@ -386,6 +391,8 @@ public class TrimmerGUI extends JFrame {
 	private void scaleToFitWindow() {
 		xScale = getFitX();
 		yScale = getFitY();
+		leftLine.changeScale(xScale);
+		rightLine.changeScale(xScale);
 		centerPanel.setPreferredSize(new Dimension((int)(data.dataPoints/xScale), (int)((data.dataMax-data.dataMin)/yScale)));
 	}
 	
@@ -399,40 +406,53 @@ public class TrimmerGUI extends JFrame {
 		return ((double)(data.dataMax-data.dataMin))/height;
 	}
 	
-	private void saveFile(Data data, DraggableLine left, DraggableLine right) throws IOException {
+	private int saveFile(Data data, DraggableLine left, DraggableLine right) throws IOException {
 		
-		JFileChooser fc = new JFileChooser(".");
+		JFileChooser fc = new JFileChooser(lastSaveDir);
 		FileNameExtensionFilter filter = new FileNameExtensionFilter("edf", "edf");
+		fc.setSelectedFile(new File(lastSaveDir + "\\" + fileName + "_trimmed.edf"));
+		
 		fc.setFileFilter(filter);
-		fc.showSaveDialog(this);
-		
-		EDFSignal signal = data.result.getSignal();
-		EDFHeader header = data.result.getHeader();
-		
-		int leftTrim = (left.enabled? left.getXReal():0);
-		int rightTrim = (right.enabled? right.getXReal():data.dataPoints);
-		
-		if ((rightTrim-leftTrim) % header.getNumberOfSamples()[0] != 0) {
-			JOptionPane.showMessageDialog(TrimmerGUI.this, "Must be a multiple of " + header.getNumberOfSamples()[0], "Save", JOptionPane.INFORMATION_MESSAGE);
-			throw new IOException();
-		}
-		
-		//Fix header
-		header.numberOfRecords = (rightTrim-leftTrim)/header.getNumberOfSamples()[0];
-		
-		//Trim the signal
-		short[][] vals = signal.getDigitalValues();
-		
-		for (int i = 0; i < vals.length; i++)
-			vals[i] = Arrays.copyOfRange(vals[i], leftTrim, rightTrim);
-		
-		File f = fc.getSelectedFile();
-		if (!f.getName().endsWith(".edf"))
-			f = new File(f.getPath() + ".edf");
+		if (fc.showSaveDialog(this) == JFileChooser.APPROVE_OPTION) {
 			
-		FileOutputStream fout = new FileOutputStream(f);
-		EDFWriter.writeIntoOutputStream(header, fout);
-		EDFWriter.writeIntoOutputStream(signal, header, fout);
-		fout.close();
+			File f = fc.getSelectedFile();
+			
+			if (f.exists()) {
+				int selection = JOptionPane.showOptionDialog(TrimmerGUI.this, "This file exists, would you like to overwrite it?", "File Overwrite", JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, null, null);
+				if (selection == JOptionPane.NO_OPTION)
+					return 0;
+			}
+		
+			lastSaveDir = f.getParent();
+			EDFSignal signal = data.result.getSignal();
+			EDFHeader header = data.result.getHeader();
+			
+			int leftTrim = (left.enabled? left.getXReal():0);
+			int rightTrim = (right.enabled? right.getXReal():data.dataPoints);
+			
+			if ((rightTrim-leftTrim) % header.getNumberOfSamples()[0] != 0) {
+				JOptionPane.showMessageDialog(TrimmerGUI.this, "Must be a multiple of " + header.getNumberOfSamples()[0], "Save", JOptionPane.INFORMATION_MESSAGE);
+				throw new IOException();
+			}
+			
+			//Fix header
+			header.numberOfRecords = (rightTrim-leftTrim)/header.getNumberOfSamples()[0];
+			
+			//Trim the signal
+			short[][] vals = signal.getDigitalValues();
+			
+			for (int i = 0; i < vals.length; i++)
+				vals[i] = Arrays.copyOfRange(vals[i], leftTrim, rightTrim);
+			
+			if (!f.getName().endsWith(".edf"))
+				f = new File(f.getPath() + ".edf");
+				
+			FileOutputStream fout = new FileOutputStream(f);
+			EDFWriter.writeIntoOutputStream(header, fout);
+			EDFWriter.writeIntoOutputStream(signal, header, fout);
+			fout.close();
+			return 1;
+		}
+		return 0;
 	}
 }
