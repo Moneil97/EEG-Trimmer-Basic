@@ -3,7 +3,7 @@ import java.awt.Graphics2D;
 
 public class DraggableLine {
 
-	static final int tolerance = 10;
+	static final int tolerance = 20;
 	boolean enabled = false;
 	private int xDrawn, xReal;
 	boolean dragging = false, left;
